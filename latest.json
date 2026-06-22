@@ -1,8 +1,7 @@
 {
-    "version":  "48.14",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.14.zip",
+    "version":  "48.15",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.15.zip",
     "notes":  [
-                  "Fixed an error that prevented importing backups from the Documents folder.",
-                  "Reminders with no due time now default to 9:00am instead of midnight."
+                  "Replaced the alarm clock emoji next to event times with a matching SVG clock icon."
               ]
 }
