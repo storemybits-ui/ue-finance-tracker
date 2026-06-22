@@ -1,9 +1,9 @@
 {
-    "version":  "48.18",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.18.zip",
+    "version":  "48.19",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.19.zip",
     "notes":  [
-                  "New Shares holding type in Net Worth: enter a ticker, market, and how many shares you own.",
-                  "Share prices update automatically online (free, no account) and are saved so your last value still shows offline.",
-                  "Tap Refresh to update prices any time, or edit the price by hand if you prefer."
+                  "Tap a share holding to edit its name, ticker, market, shares, or price.",
+                  "Adding an asset no longer shows a Debt option (debts are added from the Debts tab).",
+                  "Restored the theme list to its original single-column layout."
               ]
 }
