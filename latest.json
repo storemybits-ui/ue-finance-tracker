@@ -1,8 +1,8 @@
 {
-    "version":  "48.12",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.12.zip",
+    "version":  "48.14",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.14.zip",
     "notes":  [
-                  "Import now reads from your Documents folder (same place export saves to) instead of opening Downloads — pick a backup from the list.",
-                  "Cloud push/pull summary now shows a Profiles count when you have more than one profile, so the account total makes sense (it covers all profiles, not just the one you\u0027re viewing)."
+                  "Fixed an error that prevented importing backups from the Documents folder.",
+                  "Reminders with no due time now default to 9:00am instead of midnight."
               ]
 }
