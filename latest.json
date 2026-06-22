@@ -1,9 +1,9 @@
 {
-    "version":  "48.19",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.19.zip",
+    "version":  "48.20",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.20.zip",
     "notes":  [
-                  "Tap a share holding to edit its name, ticker, market, shares, or price.",
-                  "Adding an asset no longer shows a Debt option (debts are added from the Debts tab).",
-                  "Restored the theme list to its original single-column layout."
+                  "Share prices now use Yahoo Finance, which covers ASX (.AX) and US markets reliably; existing holdings are migrated automatically.",
+                  "Share icons no longer show the dimmed shading in any theme.",
+                  "Typing a share quantity now enables the Save button immediately — no need to tap away first."
               ]
 }
