@@ -1,9 +1,9 @@
 {
-    "version":  "48.21",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.21.zip",
+    "version":  "48.22",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.22.zip",
     "notes":  [
-                  "The ticker code is now the first field when adding shares.",
-                  "Type a code and the matching company name and current price are suggested automatically.",
-                  "Reliable live prices across ASX, US and other markets via a free Twelve Data API key (no card, no trial); a best-effort keyless source is still used if no key is set."
+                  "Removed the dark triangle from the shares icon while keeping the line style.",
+                  "ASX and other non-US share prices now update via a free source (the free Twelve Data key only covers US prices).",
+                  "Each holding now shows its currency, auto-detected from the market and editable per holding."
               ]
 }
