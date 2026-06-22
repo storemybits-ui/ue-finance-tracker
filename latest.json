@@ -1,8 +1,9 @@
 {
-    "version":  "48.10",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.10.zip",
+    "version":  "48.11",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.11.zip",
     "notes":  [
-                  "Modal close buttons now show an X (were showing dots).",
-                  "Update available row added in Settings so you can install after tapping Later."
+                  "Settings now has a What\u0027s New section showing the last 5 changelogs.",
+                  "Pulling from the cloud shows a before/after summary of what will change.",
+                  "Pushing to the cloud now previews what you\u0027re uploading before it sends."
               ]
 }
