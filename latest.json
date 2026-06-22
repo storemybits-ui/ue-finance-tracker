@@ -1,9 +1,9 @@
 {
-    "version":  "48.20",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.20.zip",
+    "version":  "48.21",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.21.zip",
     "notes":  [
-                  "Share prices now use Yahoo Finance, which covers ASX (.AX) and US markets reliably; existing holdings are migrated automatically.",
-                  "Share icons no longer show the dimmed shading in any theme.",
-                  "Typing a share quantity now enables the Save button immediately — no need to tap away first."
+                  "The ticker code is now the first field when adding shares.",
+                  "Type a code and the matching company name and current price are suggested automatically.",
+                  "Reliable live prices across ASX, US and other markets via a free Twelve Data API key (no card, no trial); a best-effort keyless source is still used if no key is set."
               ]
 }
