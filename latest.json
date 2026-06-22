@@ -1,7 +1,9 @@
 {
-    "version":  "48.17",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.17.zip",
+    "version":  "48.18",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.18.zip",
     "notes":  [
-                  "Pop-up windows now cap their height so tall ones (like the icon picker) no longer fill the whole screen, keeping the close button within easy reach."
+                  "New Shares holding type in Net Worth: enter a ticker, market, and how many shares you own.",
+                  "Share prices update automatically online (free, no account) and are saved so your last value still shows offline.",
+                  "Tap Refresh to update prices any time, or edit the price by hand if you prefer."
               ]
 }
