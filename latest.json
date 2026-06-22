@@ -1,9 +1,8 @@
 {
-    "version":  "48.11",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.11.zip",
+    "version":  "48.12",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.12.zip",
     "notes":  [
-                  "Settings now has a What\u0027s New section showing the last 5 changelogs.",
-                  "Pulling from the cloud shows a before/after summary of what will change.",
-                  "Pushing to the cloud now previews what you\u0027re uploading before it sends."
+                  "Import now reads from your Documents folder (same place export saves to) instead of opening Downloads — pick a backup from the list.",
+                  "Cloud push/pull summary now shows a Profiles count when you have more than one profile, so the account total makes sense (it covers all profiles, not just the one you\u0027re viewing)."
               ]
 }
