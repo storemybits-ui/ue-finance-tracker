@@ -1,7 +1,8 @@
 {
-    "version":  "48.15",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.15.zip",
+    "version":  "48.16",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.16.zip",
     "notes":  [
-                  "Replaced the alarm clock emoji next to event times with a matching SVG clock icon."
+                  "The Income option in Add New now uses a soft tinted icon, matching Bill and Expense instead of a solid block.",
+                  "Theme picker is now a compact two-column grid, so it no longer fills the whole screen."
               ]
 }
