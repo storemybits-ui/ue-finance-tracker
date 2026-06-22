@@ -1,7 +1,9 @@
 {
-    "version":  "48.8",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.8.zip",
+    "version":  "48.9",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.9.zip",
     "notes":  [
-
+                  "Cloud sync now keeps the most recently EDITED data, not just the most recently synced.",
+                  "Export saves straight to your Documents folder (no share sheet).",
+                  "Update checks are offline-safe and won\u0027t delay launch."
               ]
 }
