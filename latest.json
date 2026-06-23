@@ -1,9 +1,8 @@
 {
-    "version":  "49.1",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v49.1.zip",
+    "version":  "49.2",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v49.2.zip",
     "notes":  [
-                  "All share prices — US included — now come from a single free source (Yahoo Finance), so no API key is needed anymore.",
-                  "Symbol search also runs keyless now, so typing a ticker still auto-fills the company name and price across every market.",
-                  "Removed the US API-key prompt and the Settings › Share Prices key screen, since neither is needed."
+                  "Cloud sync now shows the most recent change on each side — This Device vs Cloud — when choosing which version to keep, so you can tell the two apart at a glance.",
+                  "The same last-change preview appears in the Pull and Push confirmation screens before you replace either side."
               ]
 }
