@@ -1,8 +1,9 @@
 {
-    "version":  "49.2",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v49.2.zip",
+    "version":  "49.4",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v49.4.zip",
     "notes":  [
-                  "Cloud sync now shows the most recent change on each side — This Device vs Cloud — when choosing which version to keep, so you can tell the two apart at a glance.",
-                  "The same last-change preview appears in the Pull and Push confirmation screens before you replace either side."
+                  "New Add Mortgage wizard: a mortgage is now a single combined item — the property and the loan against it — so it lives in one place (Assets, shown as your equity) instead of appearing as both an asset and a debt.",
+                  "The mortgage card shows your equity, payoff progress, repayment and rate at a glance; tap it to edit the details in the same short wizard.",
+                  "Repayments you enter still reduce the balance automatically over time, and net worth counts the property and the loan correctly."
               ]
 }
