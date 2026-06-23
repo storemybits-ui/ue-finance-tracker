@@ -1,7 +1,8 @@
 {
-    "version":  "48.33",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.33.zip",
+    "version":  "48.34",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.34.zip",
     "notes":  [
-                  "Status markers now line up with the amount on Overview rows too (matching the Transactions tab)."
+                  "ASX (and other non-US) prices now load in the installed app: native fetches that fail now fall back to the same free sources used in the browser.",
+                  "When refining a share code, the auto-filled company name now updates to the latest match (unless you\u0027ve typed your own name)."
               ]
 }
