@@ -1,9 +1,7 @@
 {
-    "version":  "48.22",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.22.zip",
+    "version":  "48.33",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.33.zip",
     "notes":  [
-                  "Removed the dark triangle from the shares icon while keeping the line style.",
-                  "ASX and other non-US share prices now update via a free source (the free Twelve Data key only covers US prices).",
-                  "Each holding now shows its currency, auto-detected from the market and editable per holding."
+                  "Status markers now line up with the amount on Overview rows too (matching the Transactions tab)."
               ]
 }
