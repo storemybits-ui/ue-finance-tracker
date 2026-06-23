@@ -1,7 +1,9 @@
 {
-    "version":  "49.01",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v49.01.zip",
+    "version":  "49.1",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v49.1.zip",
     "notes":  [
-                  "Share prices are more robust when a market is closed or halted: the fallback now reads Yahoo\u0027s previous-close field correctly, so quotes still resolve instead of failing."
+                  "All share prices — US included — now come from a single free source (Yahoo Finance), so no API key is needed anymore.",
+                  "Symbol search also runs keyless now, so typing a ticker still auto-fills the company name and price across every market.",
+                  "Removed the US API-key prompt and the Settings › Share Prices key screen, since neither is needed."
               ]
 }
