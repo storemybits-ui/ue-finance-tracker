@@ -1,8 +1,7 @@
 {
-    "version":  "49.5",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v49.5.zip",
+    "version":  "49.7",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v49.7.zip",
     "notes":  [
-                  "Each asset, debt, mortgage and holding now has a checkbox to include or exclude it from your net worth — excluded items still show in the list but aren\u0027t counted in any total.",
-                  "The Net Worth screen now keeps a steady height, so switching between Assets, Debts and Add no longer resizes and flashes."
+                  "Removing any net-worth item — asset, debt, mortgage, loan or share holding — now asks you to confirm first, so nothing is deleted by an accidental tap."
               ]
 }
