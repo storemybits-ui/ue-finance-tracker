@@ -1,8 +1,7 @@
 {
-    "version":  "48.34",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v48.34.zip",
+    "version":  "49.01",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v49.01.zip",
     "notes":  [
-                  "ASX (and other non-US) prices now load in the installed app: native fetches that fail now fall back to the same free sources used in the browser.",
-                  "When refining a share code, the auto-filled company name now updates to the latest match (unless you\u0027ve typed your own name)."
+                  "Share prices are more robust when a market is closed or halted: the fallback now reads Yahoo\u0027s previous-close field correctly, so quotes still resolve instead of failing."
               ]
 }
