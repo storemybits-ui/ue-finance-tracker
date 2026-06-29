@@ -1,8 +1,9 @@
 {
-    "version":  "50.3",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v50.3.zip",
+    "version":  "51.0",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v51.0.zip",
     "notes":  [
-                  "Editing an account balance is now recorded in History and flagged as a real data change for cloud sync, so balance edits show up in your audit log and are no longer at risk of being overwritten by another device.",
-                  "Adding and removing accounts are now logged and flagged for sync the same way."
+                  "Cloud sync can now be encrypted with a passphrase. When set, your data is encrypted on this device with AES-256 before it\u0027s uploaded — GitHub, the sync server, and anyone with your sync slot ID only ever see scrambled data.",
+                  "Set it under Cloud Sync → Encryption. Use the same passphrase on each device. Forgotten passphrases can\u0027t be recovered, so keep a local export as backup.",
+                  "File export and import are unchanged and remain unencrypted."
               ]
 }
