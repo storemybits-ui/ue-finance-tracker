@@ -1,7 +1,8 @@
 {
-    "version":  "49.7",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v49.7.zip",
+    "version":  "50.3",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v50.3.zip",
     "notes":  [
-                  "Removing any net-worth item — asset, debt, mortgage, loan or share holding — now asks you to confirm first, so nothing is deleted by an accidental tap."
+                  "Editing an account balance is now recorded in History and flagged as a real data change for cloud sync, so balance edits show up in your audit log and are no longer at risk of being overwritten by another device.",
+                  "Adding and removing accounts are now logged and flagged for sync the same way."
               ]
 }
