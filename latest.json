@@ -1,9 +1,9 @@
 {
-    "version":  "51.0",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v51.0.zip",
+    "version":  "51.1",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v51.1.zip",
     "notes":  [
-                  "Cloud sync can now be encrypted with a passphrase. When set, your data is encrypted on this device with AES-256 before it\u0027s uploaded — GitHub, the sync server, and anyone with your sync slot ID only ever see scrambled data.",
-                  "Set it under Cloud Sync → Encryption. Use the same passphrase on each device. Forgotten passphrases can\u0027t be recovered, so keep a local export as backup.",
-                  "File export and import are unchanged and remain unencrypted."
+                  "Each profile now has its own net worth, and you can combine selected profiles into a single total. Open the Net Worth screen to tick which profiles to include.",
+                  "When two or more profiles are included, the Overview Net Worth card shows the combined total across them; otherwise it shows just the current profile.",
+                  "Your include/exclude choice is saved per profile, so it travels with export, import and encrypted cloud sync."
               ]
 }
