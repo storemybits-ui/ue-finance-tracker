@@ -1,9 +1,7 @@
 {
-    "version":  "51.1",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v51.1.zip",
+    "version":  "53.26",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v53.26.zip",
     "notes":  [
-                  "Each profile now has its own net worth, and you can combine selected profiles into a single total. Open the Net Worth screen to tick which profiles to include.",
-                  "When two or more profiles are included, the Overview Net Worth card shows the combined total across them; otherwise it shows just the current profile.",
-                  "Your include/exclude choice is saved per profile, so it travels with export, import and encrypted cloud sync."
+                  "Four more icons finalised from the third review round: Hammer (striking a nail), DNA (horizontal helix), Meditation (zen figure with aura and crossed legs) and Tennis (the ball with its seams)."
               ]
 }
