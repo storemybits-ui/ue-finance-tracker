@@ -1,8 +1,7 @@
 {
-    "version":  "54.12",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v54.12.zip",
+    "version":  "54.13",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v54.13.zip",
     "notes":  [
-                  "Fixed biometric unlock never completing: the app was calling the biometric plugin through a method name that only exists in a code layer this app doesn\u0027t ship, so the fingerprint/face prompt could pass on the device yet the app never heard back. It now talks to the plugin\u0027s real native method (with the old name kept as a fallback), so enabling biometrics in Settings \u003e Security and unlocking with them works.",
-                  "The Biometric Unlock row in Settings \u003e Security now shows a small status line underneath — which biometric plugin the app can see, or that none is in this build — so it\u0027s obvious whether an app update is still needed."
+                  "Fixed biometric unlock showing as unavailable even with the biometrics-enabled app installed: recent versions of the biometric plugin announce themselves to the app under a different internal name than before, so the app was looking in the wrong place and concluding no plugin existed. It now checks the new name first (and still recognises the old ones), so the Biometric Unlock toggle appears and works."
               ]
 }
