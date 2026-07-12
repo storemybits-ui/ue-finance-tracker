@@ -1,8 +1,7 @@
 {
-    "version":  "53.49",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v53.49.zip",
+    "version":  "53.50",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v53.50.zip",
     "notes":  [
-                  "Fixed quick expenses (and any already-paid occurrence) not deleting: deletion now un-posts the payment first — the transaction disappears and the money returns to the account. Deleting the only occurrence of a one-time item removes the item itself. Undo restores both the transaction and the balance.",
-                  "Deleting or confirming no longer scrolls the page back to the top — the list keeps its position; switching tabs still starts at the top."
+                  "Actually fixed the page jumping to the top after tapping OK on a delete: two back-to-back screen refreshes were racing, with the second one overwriting the remembered scroll position with zero before the first had restored it. The list now stays exactly where it was."
               ]
 }
