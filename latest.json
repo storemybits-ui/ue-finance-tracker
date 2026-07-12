@@ -1,8 +1,9 @@
 {
-    "version":  "54.23",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v54.23.zip",
+    "version":  "54.33",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v54.33.zip",
     "notes":  [
-                  "The cloud Sync Slot ID is now locked by default on every device, so it can\u0027t be edited or replaced by accident. Unlocking asks for confirmation first and explains the risk (changing the ID can disconnect the device from its backup); locking again is instant. Entering an ID for the first time on a fresh device still works without unlocking.",
-                  "New Copy button next to the Sync Slot ID copies it straight to the clipboard with a quick confirmation toast — no window or prompt opens."
+                  "The month selector is gone from the Recurring tab (schedules aren\u0027t tied to a viewed month) and got a cleaner look everywhere else: one unified pill with the arrows, the month/year picker and the jump-to-today icon as segments of a single control, separated by hairline dividers — everything the same height by construction. Swipe on it still changes months.",
+                  "The Overview now scrolls as one page: the summary cards and balance chart scroll with the rest of the content instead of being pinned, so more of the screen is usable. Only the header with the month selector stays fixed. All chart gestures (scrub, drag to scroll days, tap for day details) work exactly as before.",
+                  "New Restore Points in the cloud panel protect against picking the wrong sync option: before a pull replaces this device\u0027s data, and before a manual push replaces the cloud copy, a snapshot is saved automatically (newest 5 kept, on this device only). Restore any of them at any time — restoring saves a point first, so even a restore can be undone. A + Save Now button adds a manual point whenever you like."
               ]
 }
