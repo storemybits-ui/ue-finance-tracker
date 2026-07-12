@@ -1,7 +1,8 @@
 {
-    "version":  "53.50",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v53.50.zip",
+    "version":  "54.12",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v54.12.zip",
     "notes":  [
-                  "Actually fixed the page jumping to the top after tapping OK on a delete: two back-to-back screen refreshes were racing, with the second one overwriting the remembered scroll position with zero before the first had restored it. The list now stays exactly where it was."
+                  "Fixed biometric unlock never completing: the app was calling the biometric plugin through a method name that only exists in a code layer this app doesn\u0027t ship, so the fingerprint/face prompt could pass on the device yet the app never heard back. It now talks to the plugin\u0027s real native method (with the old name kept as a fallback), so enabling biometrics in Settings \u003e Security and unlocking with them works.",
+                  "The Biometric Unlock row in Settings \u003e Security now shows a small status line underneath — which biometric plugin the app can see, or that none is in this build — so it\u0027s obvious whether an app update is still needed."
               ]
 }
