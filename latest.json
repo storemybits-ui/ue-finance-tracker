@@ -1,7 +1,8 @@
 {
-    "version":  "53.26",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v53.26.zip",
+    "version":  "53.49",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v53.49.zip",
     "notes":  [
-                  "Four more icons finalised from the third review round: Hammer (striking a nail), DNA (horizontal helix), Meditation (zen figure with aura and crossed legs) and Tennis (the ball with its seams)."
+                  "Fixed quick expenses (and any already-paid occurrence) not deleting: deletion now un-posts the payment first — the transaction disappears and the money returns to the account. Deleting the only occurrence of a one-time item removes the item itself. Undo restores both the transaction and the balance.",
+                  "Deleting or confirming no longer scrolls the page back to the top — the list keeps its position; switching tabs still starts at the top."
               ]
 }
