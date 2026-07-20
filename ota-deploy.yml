@@ -1,0 +1,152 @@
+# Finance Tracker — OTA deploy (mobile trigger, no PC needed)
+#
+# Mirrors deploy-ota.ps1 exactly:
+#   1. Picks the newest finance-tracker-v*.html sitting in incoming/
+#   2. Copies it to www/index.html
+#   3. Reads APP_VERSION + that version's CHANGELOG entry out of the HTML
+#   4. Zips www/ (index.html at the zip root) to bundles/bundle-v{VERSION}.zip
+#   5. Writes latest.json pointing at the raw GitHub URL for that bundle
+#   6. Commits everything back to main and clears incoming/
+#
+# HOW TO TRIGGER FROM YOUR PHONE:
+#   Open github.com in your phone's BROWSER (not the GitHub app — its uploader
+#   is limited). Go to this repo -> incoming folder -> "Add file" -> "Upload
+#   files" -> pick the finance-tracker-vX.Y.html you downloaded -> commit
+#   directly to main. The push below fires automatically.
+#
+# ONE-TIME SETUP (also doable from your phone, same Upload files flow):
+#   - Put this file at .github/workflows/ota-deploy.yml in the repo.
+#   - Create incoming/.gitkeep (or just upload the first HTML file into
+#     incoming/ — GitHub creates the folder for you).
+#   - Settings -> Actions -> General -> Workflow permissions -> set to
+#     "Read and write permissions" (needed once, so this workflow can push).
+
+name: OTA Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'incoming/finance-tracker-v*.html'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ota-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pick newest version from incoming/
+        id: pick
+        run: |
+          set -e
+          shopt -s nullglob
+          cd incoming
+          best=""
+          bestver="0"
+          for f in finance-tracker-v*.html; do
+            ver="${f#finance-tracker-v}"
+            ver="${ver%.html}"
+            if [ -z "$best" ] || [ "$(printf '%s\n%s\n' "$ver" "$bestver" | sort -V | tail -1)" = "$ver" ]; then
+              best="$f"
+              bestver="$ver"
+            fi
+          done
+          cd ..
+          if [ -z "$best" ]; then
+            echo "ERROR: no finance-tracker-v*.html found in incoming/"
+            exit 1
+          fi
+          echo "Using source: incoming/$best"
+          mkdir -p www
+          cp "incoming/$best" www/index.html
+          echo "file=$best" >> "$GITHUB_OUTPUT"
+          echo "version=$bestver" >> "$GITHUB_OUTPUT"
+
+      - name: Extract APP_VERSION + changelog notes
+        id: notes
+        run: |
+          python3 - <<'PYEOF'
+          import re, json, os
+
+          html = open("www/index.html", encoding="utf-8").read()
+          m = re.search(r'APP_VERSION="([\d.]+)"', html)
+          if not m:
+              raise SystemExit("ERROR: APP_VERSION not found in index.html")
+          app_ver = m.group(1)
+
+          notes = []
+          pat = r'"' + re.escape(app_ver) + r'"\s*:\s*\[(.*?)\]'
+          clm = re.search(pat, html, re.S)
+          if clm:
+              for mm in re.finditer(r'"((?:[^"\\]|\\.)*)"', clm.group(1)):
+                  notes.append(mm.group(1).replace('\\"', '"').replace("\\'", "'"))
+
+          with open("notes.json", "w", encoding="utf-8") as f:
+              json.dump(notes, f)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write(f"appver={app_ver}\n")
+          PYEOF
+
+      - name: Sanity check filename version matches APP_VERSION
+        run: |
+          if [ "${{ steps.pick.outputs.version }}" != "${{ steps.notes.outputs.appver }}" ]; then
+            echo "WARNING: filename version (${{ steps.pick.outputs.version }}) != APP_VERSION in file (${{ steps.notes.outputs.appver }})"
+            echo "Proceeding with APP_VERSION from inside the file, since that's the source of truth."
+          fi
+
+      - name: Build versioned bundle
+        run: |
+          mkdir -p bundles
+          cd www
+          zip -X -r "../bundles/bundle-v${{ steps.notes.outputs.appver }}.zip" index.html
+          cd ..
+
+      - name: Write latest.json
+        run: |
+          python3 - <<'PYEOF'
+          import json, os
+
+          ver = "${{ steps.notes.outputs.appver }}"
+          notes = json.load(open("notes.json", encoding="utf-8"))
+          owner = "storemybits-ui"
+          repo = "ue-finance-tracker"
+          branch = "main"
+
+          manifest = {
+              "version": ver,
+              "url": f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/bundles/bundle-v{ver}.zip",
+              "notes": notes,
+          }
+          with open("latest.json", "w", encoding="utf-8") as f:
+              json.dump(manifest, f, indent=2)
+          PYEOF
+
+      - name: Clear incoming/ and commit
+        run: |
+          rm -f "incoming/${{ steps.pick.outputs.file }}"
+          find incoming -maxdepth 1 -name 'finance-tracker-v*.html' -delete || true
+          touch incoming/.gitkeep
+
+          git config user.name "ota-bot"
+          git config user.email "ota-bot@users.noreply.github.com"
+          git add www/index.html "bundles/bundle-v${{ steps.notes.outputs.appver }}.zip" latest.json incoming
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+          else
+            git commit -m "release v${{ steps.notes.outputs.appver }}"
+            git push
+          fi
+
+      - name: Summary
+        run: |
+          echo "### Published v${{ steps.notes.outputs.appver }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Apps will pick it up on next launch (raw GitHub may cache latest.json for a few minutes)." >> "$GITHUB_STEP_SUMMARY"
