@@ -1,8 +1,8 @@
 {
-    "version":  "55.0",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v55.0.zip",
-    "notes":  [
-                  "The Net Worth screen now matches the rest of the app: every asset, share, debt and loan row, the sort pill, back button and add form all carry the same soft gradient border and card background used everywhere else, instead of the old flat grey boxes.",
-                  "That same treatment now runs through the whole app for consistency: settings panels, cloud sync and restore point cards, budget cards and totals, profile and category rows, import summaries and the setup wizard all share one card style. Rows that use a coloured border to show state (open editors, debts, the selected profile or account) keep it."
-              ]
+  "version": "56.0",
+  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v56.0.zip",
+  "notes": [
+    "The asset and debt cards on the Net Worth screen now carry a soft top-lit wash of their own colour \\u2014 green for assets, shares, mortgages and loans, red for debts \\u2014 instead of sitting flat white in the light theme. The tint comes from each theme's own palette, so every theme (including both mono modes) keeps its character.",
+    "The Add New menu has proper depth: each option is now a layered gradient card in its type colour with a matching icon chip, a short line explaining what it does, and a chevron \\u2014 replacing the flat single-tint rows."
+  ]
 }
