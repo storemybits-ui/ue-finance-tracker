@@ -421,10 +421,14 @@ body.dark select option{background:#13161F}
 <div id="bg-blobs"></div>
 <div id="root"></div>
 <script>
-var APP_VERSION="56.0";
+var APP_VERSION="57.0";
 /* ── Changelog: shown after an update installs. Keyed by app version. ──────────
    Add a new entry each release with short, user-facing bullet points. ────────── */
 var CHANGELOG = {
+  "57.0": [
+    "New Portfolio tab (5th bottom nav tab, off by default toggle in Settings > Layout — on by default): a dedicated view of your real share holdings, with a total-value hero card, a real Today's Change figure once you've refreshed prices, and a searchable list. Adding and editing holdings uses the same Add Shares / Edit Shares screens as Net Worth, so there's still just one place your holdings live.",
+    "Share price refreshes now also capture the day's real percentage and dollar change from Yahoo Finance where available, shown as green/red pills on each holding."
+  ],
   "56.0": [
     "The asset and debt cards on the Net Worth screen now carry a soft top-lit wash of their own colour \u2014 green for assets, shares, mortgages and loans, red for debts \u2014 instead of sitting flat white in the light theme. The tint comes from each theme's own palette, so every theme (including both mono modes) keeps its character.",
     "The Add New menu has proper depth: each option is now a layered gradient card in its type colour with a matching icon chip, a short line explaining what it does, and a chevron \u2014 replacing the flat single-tint rows."
@@ -3507,7 +3511,12 @@ function _yahooQuote(symbol,market){
         :meta.previousClose!=null?meta.previousClose
         :meta.chartPreviousClose);
       if(price==null||!isFinite(price))throw new Error('No price for '+sym);
-      return {price:price,at:new Date().toISOString(),currency:(meta&&meta.currency)||_marketCurrency(market)};
+      /* Yahoo's chart-meta payload also carries today's move (used by the Portfolio
+         tab's real change indicators). Not present for every symbol — null when absent
+         so callers never fabricate a number. */
+      var changePercent=(meta&&meta.regularMarketChangePercent!=null&&isFinite(meta.regularMarketChangePercent))?meta.regularMarketChangePercent:null;
+      var changeAmt=(meta&&meta.regularMarketChange!=null&&isFinite(meta.regularMarketChange))?meta.regularMarketChange:null;
+      return {price:price,at:new Date().toISOString(),currency:(meta&&meta.currency)||_marketCurrency(market),changePercent:changePercent,changeAmt:changeAmt};
     });
   }
   return tryHost('query1.finance.yahoo.com').catch(function(){return tryHost('query2.finance.yahoo.com');});
@@ -3642,19 +3651,22 @@ window.refreshSharePrices=function(opts){
   }
   if(state._sharesRefreshing)return;
   state._sharesRefreshing=true;
-  if(state.modal==='netWorth')patchModal();
+  if(state.modal==='netWorth')patchModal();else if(state.tab==='portfolio')render();
   var i=0,updated=0,failed=0;
   function done(){
     state._sharesRefreshing=false;
     if(updated)persist();
-    if(state.modal==='netWorth')patchModal();
+    if(state.modal==='netWorth')patchModal();else if(state.tab==='portfolio')render();
     if(opts.manual)showSimpleToast(updated?(updated+' price'+(updated===1?'':'s')+' updated'+(failed?' · '+failed+' failed':'')):'Couldn\u2019t reach the price service — last saved prices kept');
   }
   function next(){
     if(i>=shares.length){done();return;}
     var a=shares[i++];
     fetchSharePrice(a.shareSymbol,a.shareMarket).then(function(q){
-      a.sharePrice=q.price;a.sharePriceAt=q.at;if(q.currency)a.shareCurrency=q.currency;a.value=shareValue(a);updated++;
+      a.sharePrice=q.price;a.sharePriceAt=q.at;if(q.currency)a.shareCurrency=q.currency;
+      if(q.changePercent!=null)a.shareChangePct=q.changePercent;
+      if(q.changeAmt!=null)a.shareChangeAmt=q.changeAmt;
+      a.value=shareValue(a);updated++;
     }).catch(function(){failed++;}).then(function(){setTimeout(next,250);});
   }
   next();
@@ -5123,7 +5135,8 @@ function _doCloseModal(){
   }
   if(state.modal==='editShare'){
     state._editShareDraft=null;
-    setState({modal:'netWorth'});
+    var _rtClose=state._nwReturnTo;state._nwReturnTo=null;
+    setState({modal:_rtClose==='portfolio'?null:'netWorth'});
     return;
   }
   if(state.modal==='liabilityWizard'){
@@ -5160,6 +5173,22 @@ window.openNetWorthModal=function(){
   setTimeout(function(){ try{_maybeRefreshShares();}catch(e){} },300);
 };
 window.setNwTab=function(t){state._nwTab=t;state._nwSortMenu=false;state._nwAddMenu=false;patchModal();};
+/* openAddShareFromPortfolio: jumps straight into the Net Worth modal's existing
+   Add Shares form (same fields, same addAsset() save path as the Net Worth
+   screen's own Add flow — no separate form is built for the Portfolio tab).
+   Marks _nwReturnTo so Save closes back to the Portfolio tab instead of
+   landing on the Net Worth list. */
+window.openAddShareFromPortfolio=function(){
+  state._nwAddMenu=false;
+  state._nwSortMenu=false;
+  state._assetDeleteConfirm=null;
+  state._openDropdown=null;
+  state._assetDraft={name:"",value:"",icon:"chart_line",isDebt:false,isShare:true,shareSymbol:"",shareMarket:".AX",shareQty:"",debtOwing:"",debtPayment:"",debtFreqUnit:"months",debtFreqInterval:1,debtStartDate:todayStr,growthAmount:"",growthFreqUnit:"months",growthFreqInterval:1,growthStartDate:todayStr};
+  state._shareLookup=null;
+  state._nwTab='add';
+  state._nwReturnTo='portfolio';
+  setState({modal:'netWorth'});
+};
 window.setNwSort=function(v){state.nwSort=v;save("nwSort",v);patchModal();};
 window.toggleNwSortMenu=function(){state._nwSortMenu=!state._nwSortMenu;patchModal();};
 window.chooseNwSort=function(v){state.nwSort=v;state._nwSortMenu=false;save("nwSort",v);patchModal();};
@@ -5272,7 +5301,8 @@ window.addAsset=function(){
     recordHistory("created","Added shares: "+sAsset.name+" ("+sAsset.shareQty+" "+sAsset.shareSymbol+")",{assetId:sAsset.id,assetName:sAsset.name,isShare:true});
     haptic("medium");persist();
     showSimpleToast("Shares added: "+sAsset.name);
-    setNwTab("list");
+    var _rtAdd=state._nwReturnTo;state._nwReturnTo=null;
+    if(_rtAdd==='portfolio'){setState({modal:null});}else{setNwTab("list");}
     /* Fetch the live price right away */
     setTimeout(function(){ try{refreshSharePrices({});}catch(e){} },200);
     return;
@@ -5335,7 +5365,11 @@ window.confirmDeleteAsset=function(){
   if(!dc)return;
   var fromEditShare=(state.modal==='editShare');
   deleteAsset(dc.id);
-  if(fromEditShare){state._editShareDraft=null;setState({modal:'netWorth'});}
+  if(fromEditShare){
+    state._editShareDraft=null;
+    var _rtDel=state._nwReturnTo;state._nwReturnTo=null;
+    setState({modal:_rtDel==='portfolio'?null:'netWorth'});
+  }
 };
 function _assetDeleteConfirmHTML(){
   var dc=state._assetDeleteConfirm;if(!dc)return '';
@@ -5470,22 +5504,31 @@ window.refreshOneShare=function(id){
   var a=(state.assets||[]).find(function(x){return x.id===id;});
   if(!a||!a.isShare)return;
   if(typeof navigator!=='undefined'&&navigator.onLine===false){showSimpleToast('Offline — last saved price kept');return;}
-  state._sharesRefreshing=true;if(state.modal==='netWorth'||state.modal==='editShare')patchModal();
+  state._sharesRefreshing=true;if(state.modal==='netWorth'||state.modal==='editShare')patchModal();else if(state.tab==='portfolio')render();
   fetchSharePrice(a.shareSymbol,a.shareMarket).then(function(q){
-    a.sharePrice=q.price;a.sharePriceAt=q.at;if(q.currency)a.shareCurrency=q.currency;a.value=shareValue(a);persist();
+    a.sharePrice=q.price;a.sharePriceAt=q.at;if(q.currency)a.shareCurrency=q.currency;
+    if(q.changePercent!=null)a.shareChangePct=q.changePercent;
+    if(q.changeAmt!=null)a.shareChangeAmt=q.changeAmt;
+    a.value=shareValue(a);persist();
     if(state._editShareDraft&&state._editShareDraft.id===id){state._editShareDraft.sharePrice=q.price;state._editShareDraft.sharePriceAt=q.at;if(q.currency)state._editShareDraft.shareCurrency=q.currency;}
     showSimpleToast(a.shareSymbol+' updated: '+fmt(q.price)+(a.shareCurrency?' '+a.shareCurrency:''));
   }).catch(function(e){
     showSimpleToast('Couldn\u2019t update '+a.shareSymbol+' — last price kept');
-  }).then(function(){state._sharesRefreshing=false;if(state.modal==='netWorth'||state.modal==='editShare')patchModal();});
+  }).then(function(){state._sharesRefreshing=false;if(state.modal==='netWorth'||state.modal==='editShare')patchModal();else if(state.tab==='portfolio')render();});
 };
 /* ── Tap-to-edit a share holding ── */
-window.openEditShare=function(id){
+window.openEditShare=function(id,returnTo){
   var a=(state.assets||[]).find(function(x){return x.id===id;});
   if(!a||!a.isShare)return;
   state._assetDeleteConfirm=null;
   state._openDropdown=null;
   state._editShareDraft={id:a.id,name:a.name,icon:a.icon||'chart_line',shareSymbol:a.shareSymbol||'',shareMarket:a.shareMarket||'.AX',shareQty:a.shareQty,sharePrice:a.sharePrice,sharePriceAt:a.sharePriceAt,shareCurrency:a.shareCurrency||_marketCurrency(a.shareMarket)};
+  /* Which screen Save/Delete/Close should land on. Defaults to 'netWorth' — the
+     screen editShare was always nested under before the Portfolio tab existed —
+     so every other call site keeps its exact prior behavior. The Portfolio tab
+     passes 'portfolio' so it closes straight back to the tab instead of opening
+     the Net Worth sheet on top of it. */
+  state._nwReturnTo=returnTo||'netWorth';
   setState({modal:'editShare'});
 };
 window.setEditShare=function(k,v){state._editShareDraft=Object.assign({},state._editShareDraft||{});state._editShareDraft[k]=v;patchModal();};
@@ -5530,7 +5573,8 @@ window.saveEditShare=function(){
   recordHistory('edited',label,{assetId:a.id,assetName:a.name,isShare:true,beforeQty:beforeQty,afterQty:qty,beforePrice:beforePrice,afterPrice:(parseFloat(a.sharePrice)||0)});
   persist();
   state._editShareDraft=null;
-  setState({modal:'netWorth'});
+  var _rtSave=state._nwReturnTo;state._nwReturnTo=null;
+  setState({modal:_rtSave==='portfolio'?null:'netWorth'});
   /* If the symbol/market changed, fetch a fresh price for the new ticker */
   if(symbolChanged)setTimeout(function(){ try{refreshOneShare(a.id);}catch(e){} },200);
 };
@@ -7278,7 +7322,7 @@ function _writeSingleProfileData(profileId,data){
   if(data.uiPrefs){
     sv('uiPrefs',data.uiPrefs);
     /* Also update in-memory state so the UI reflects imported prefs immediately */
-    var _uiPDef={navCompact:true,budgetChartStyle:"bars",saveFileAuto:true,heroCatColors:true,showStatCards:true,showPaydayStrip:true,showCatSpendBar:true,showOverviewToggle:true,showHistoryTab:true,showTransfersTab:false,showForecastSection:true,showOverdueSection:true,showIncomeTab:true,showCalendarTab:true,showBudgetsTab:true,showMoneyTab:true,showTransactionsTab:true};
+    var _uiPDef={navCompact:true,budgetChartStyle:"bars",saveFileAuto:true,heroCatColors:true,showStatCards:true,showPaydayStrip:true,showCatSpendBar:true,showOverviewToggle:true,showHistoryTab:true,showTransfersTab:false,showForecastSection:true,showOverdueSection:true,showIncomeTab:true,showCalendarTab:true,showBudgetsTab:true,showMoneyTab:true,showPortfolioTab:true,showTransactionsTab:true};
     state.uiPrefs=Object.assign({},_uiPDef,data.uiPrefs);
   }
 
@@ -7360,7 +7404,7 @@ function _reloadCurrentProfileState(){
   state.includeInTotalNW=StorageAdapter.get(pfx+'includeInTotalNW',true);
   state.appTitle=StorageAdapter.get(pfx+'appTitle',prof.name);
   state.calWeekStart=StorageAdapter.get(pfx+'calWeekStart',0);
-  var _uiPrefDef={navCompact:true,budgetChartStyle:"bars",saveFileAuto:true,heroCatColors:true,showStatCards:true,showPaydayStrip:true,showCatSpendBar:true,showOverviewToggle:true,showHistoryTab:true,showTransfersTab:false,showForecastSection:true,showOverdueSection:true,showIncomeTab:true,showCalendarTab:true,showBudgetsTab:true,showMoneyTab:true,showTransactionsTab:true};
+  var _uiPrefDef={navCompact:true,budgetChartStyle:"bars",saveFileAuto:true,heroCatColors:true,showStatCards:true,showPaydayStrip:true,showCatSpendBar:true,showOverviewToggle:true,showHistoryTab:true,showTransfersTab:false,showForecastSection:true,showOverdueSection:true,showIncomeTab:true,showCalendarTab:true,showBudgetsTab:true,showMoneyTab:true,showPortfolioTab:true,showTransactionsTab:true};
   var _uiPrefStored=StorageAdapter.get(pfx+'uiPrefs',null);
   state.uiPrefs=_uiPrefStored?Object.assign({},_uiPrefDef,_uiPrefStored):_uiPrefDef;
   state.upcomingRange=StorageAdapter.get(pfx+'upcomingRange','this_month');
@@ -8411,7 +8455,7 @@ function renderMonthDropPanel(){
 }
 function renderMonthBar(){
   /* The Recurring tab manages schedules, not a viewed month — no bar there. */
-  if(state.tab==='money')return '';
+  if(state.tab==='money'||state.tab==='portfolio')return '';
   var yr=state.calYear,mo=state.calMonth;
   var isCurMo=yr===today.getFullYear()&&mo===today.getMonth();
   var ac=accent();
@@ -8723,6 +8767,7 @@ function renderTabs(){
   if(_up.showCalendarTab!==false)tabs.push(["calendar","Calendar","calendar"]);
   if(_up.showMoneyTab!==false)tabs.push(["money","Recurring","wallet"]);
   if(_up.showBudgetsTab!==false)tabs.push(["budgets","Budgets","budgets"]);
+  if(_up.showPortfolioTab!==false)tabs.push(["portfolio","Portfolio","portfolio"]);
   /* Activity tab removed from navigation (v53.31) — all its functionality lives in the Calendar tab now. */
   /* History is no longer a tab — it opens as a sheet from the Activity tab. */
 
@@ -8767,6 +8812,190 @@ function renderTabs(){
     moreBtn+
   '</div>';
 }
+
+/* ─── Portfolio tab ──────────────────────────────────────────────────────────
+   A dedicated view of the user's real share holdings (state.assets filtered by
+   isShare) — reuses the SAME data, add flow (openAddShareFromPortfolio →
+   the Net Worth modal's existing Add Shares form → addAsset()) and edit flow
+   (openEditShare → the existing editShare modal) as the Net Worth screen, so
+   there is exactly one place holdings are added/edited/deleted. No parallel
+   data store, no fabricated numbers: the hero total is a real sum of
+   shareValue(a); the change figures come only from shareChangePct/
+   shareChangeAmt, which are only ever set from a real Yahoo Finance quote
+   (see _yahooQuote / refreshSharePrices) — holdings that have never been
+   refreshed are shown as flat/neutral rather than inventing a number. ────── */
+function _portfolioHoldings(){return (state.assets||[]).filter(function(a){return a.isShare;});}
+function _portfolioFilteredSorted(){
+  var q=(state._portfolioSearch||'').trim().toLowerCase();
+  var list=_portfolioHoldings();
+  if(q){
+    list=list.filter(function(a){
+      var t=((a.shareSymbol||'')+' '+(a.name||'')).toLowerCase();
+      return t.indexOf(q)>=0;
+    });
+  }
+  return list.slice().sort(function(x,y){return shareValue(y)-shareValue(x);});
+}
+function _portfolioRowHTML(a){
+  var ac=accent(),rdFg=typeRedFg();
+  var qty=parseFloat(a.shareQty)||0,price=parseFloat(a.sharePrice)||0;
+  var val=qty*price;
+  var refreshing=!!state._sharesRefreshing;
+  var asOf=fmtAsOf(a.sharePriceAt);
+  var cur=a.shareCurrency||_marketCurrency(a.shareMarket);
+  /* Real data only — a holding that has never been refreshed has no
+     shareChangePct, and is shown flat/neutral rather than a fake 0%. */
+  var hasChg=a.shareChangePct!=null&&isFinite(a.shareChangePct);
+  var chgUp=hasChg&&a.shareChangePct>=0;
+  var chgColor=hasChg?(chgUp?ac:rdFg):'var(--muted)';
+  var chgBg=hasChg?(chgUp?td('accent'):td('red')):'var(--surface)';
+  var chgTxt=hasChg?((chgUp?'+':'')+a.shareChangePct.toFixed(2)+'%'):'—';
+  var chgIcon=hasChg?ic(chgUp?'trending_up':'trending_down',chgColor,11):'';
+  return '<div onclick="openEditShare('+a.id+',\'portfolio\')" style="background:linear-gradient(180deg,'+ac+'12,'+ac+'05),var(--surface);border-radius:10px;border:1px solid '+ac+'26;margin-bottom:6px;overflow:hidden;cursor:pointer">'+
+    '<div style="display:flex;align-items:center;gap:9px;padding:11px 12px">'+
+      '<div style="width:36px;height:36px;border-radius:9px;background:'+ac+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(isIconKey(a.icon)?a.icon:'chart_line',ac,20)+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(a.name||'')+'</div>'+
+        '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:2px">'+
+          '<span style="font-size:9px;font-weight:700;color:'+ac+';background:'+td("accent")+';border-radius:4px;padding:1px 5px;font-family:monospace">'+escHtml(a.shareSymbol||'')+' · '+_shareMarketShort(a.shareMarket)+'</span>'+
+          '<span class="'+(refreshing?'shimmer':'')+'" style="font-size:10px;color:var(--muted)">'+(qty%1===0?qty:qty.toFixed(2))+' @ '+fmt(price)+(cur?' '+cur:'')+'</span>'+
+        '</div>'+
+        '<div style="font-size:9px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:3px">'+ic('clock','currentColor',9)+'<span>'+asOf+'</span></div>'+
+      '</div>'+
+      '<div style="text-align:right;flex-shrink:0">'+
+        '<div class="'+(refreshing?'shimmer':'')+'" style="font-size:14px;font-weight:700;color:'+ac+';font-family:monospace">'+fmt(val)+'</div>'+
+        '<div style="display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:700;color:'+chgColor+';background:'+chgBg+';border-radius:5px;padding:1px 5px;margin-top:2px">'+chgIcon+'<span>'+chgTxt+'</span></div>'+
+      '</div>'+
+      '<button onclick="event.stopPropagation();refreshOneShare('+a.id+')" '+(refreshing?'disabled':'')+' style="background:'+td("accent")+';border:none;color:'+ac+';border-radius:7px;padding:5px 10px;cursor:'+(refreshing?'default':'pointer')+';font-family:inherit;flex-shrink:0;margin-left:6px;opacity:'+(refreshing?'.5':'1')+'" title="Update price">'+ic('refresh',ac,14)+'</button>'+
+    '</div>'+
+  '</div>';
+}
+function _buildPortfolioListHTML(){
+  var list=_portfolioFilteredSorted();
+  var q=(state._portfolioSearch||'').trim();
+  if(!list.length){
+    if(q)return '<div style="text-align:center;padding:24px 10px;color:var(--muted);font-size:12px">No holdings match "'+escHtml(q)+'"</div>';
+    return emptyState('portfolio','No holdings yet','Add a stock or ETF holding to start tracking your portfolio here.');
+  }
+  return list.map(_portfolioRowHTML).join('');
+}
+/* Keyboard-safe search: store without a full render on each keystroke, then
+   patch just the list — same debounced idiom as the History tab's search. */
+function _patchPortfolioList(){
+  var list=document.getElementById('portfolio-list');
+  if(!list){render();return;}
+  list.innerHTML=_buildPortfolioListHTML();
+}
+var _pfSearchTimer=null;
+window.setPortfolioSearchSilent=function(v){
+  state._portfolioSearch=v;
+  clearTimeout(_pfSearchTimer);
+  _pfSearchTimer=setTimeout(function(){_patchPortfolioList();},300);
+};
+window.clearPortfolioSearch=function(){
+  state._portfolioSearch='';
+  var inp=document.getElementById('portfolio-search-input');
+  if(inp)inp.value='';
+  _patchPortfolioList();
+};
+function renderPortfolioTab(){
+  var ac=accent(),at=accentText(),rdFg=typeRedFg();
+  var holdings=_portfolioHoldings();
+
+  function addBtnHTML(){
+    return '<button onclick="openAddShareFromPortfolio()" style="'+S({width:"100%",background:ac,border:"none",borderRadius:"12px",padding:"12px",color:at,fontWeight:700,fontSize:"13px",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:"7px"})+'">'+ic('plus',at,16)+' Add Holding</button>';
+  }
+
+  if(!holdings.length){
+    return emptyState('portfolio','No holdings yet','Add a stock or ETF holding to start tracking your portfolio here.')+addBtnHTML();
+  }
+
+  var refreshing=!!state._sharesRefreshing;
+
+  /* Hero total — a real sum of shareValue(a) over every holding, mirroring
+     exactly how totalNetWorth()/the Net Worth "Shares" section total their
+     value (same a.value convention, same lack of cross-currency conversion —
+     this app doesn't convert between currencies anywhere, so a USD holding's
+     number is summed alongside AUD ones just as it already is in Net Worth). */
+  var totalValue=holdings.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:shareValue(a));},0);
+
+  /* Today's change — value-weighted average of each holding's REAL
+     regularMarketChangePercent (only holdings that have actually been
+     refreshed contribute). Dollar change is the real per-holding
+     shareChangeAmt × quantity, summed. Never fabricated: if nothing has
+     been refreshed yet, haveChangeData is false and the UI says so. */
+  var withChange=holdings.filter(function(a){return !a.excludeFromNetWorth&&a.shareChangePct!=null&&isFinite(a.shareChangePct);});
+  var haveChangeData=withChange.length>0;
+  var totalChangeValue=0,weightedPctSum=0,weightW=0;
+  withChange.forEach(function(a){
+    var v=shareValue(a);
+    totalChangeValue+=(parseFloat(a.shareChangeAmt)||0)*(parseFloat(a.shareQty)||0);
+    weightedPctSum+=v*(parseFloat(a.shareChangePct)||0);
+    weightW+=v;
+  });
+  var aggPct=weightW>0?weightedPctSum/weightW:0;
+  var chgUp=totalChangeValue>=0;
+  var chgColor=haveChangeData?(chgUp?ac:rdFg):'var(--muted)';
+
+  var lastUpdated=null;
+  holdings.forEach(function(a){
+    if(a.sharePriceAt){var t=new Date(a.sharePriceAt).getTime();if(!isNaN(t)&&(!lastUpdated||t>lastUpdated))lastUpdated=a.sharePriceAt;}
+  });
+  var luDisplay='—',luSub='Never refreshed';
+  if(lastUpdated){
+    var _s=fmtAsOf(lastUpdated);
+    var _p=_s.split(' ');
+    if(_p[0]==='today'){luSub='Today';luDisplay=_p.slice(1).join(' ');}
+    else{luSub=_p[0]+' '+_p[1];luDisplay=_p.slice(2).join(' ');}
+  }
+
+  var heroTrend=haveChangeData?
+    '<div style="display:inline-flex;align-items:center;gap:5px;background:'+(chgUp?td('accent'):td('red'))+';border-radius:8px;padding:4px 9px;margin-top:8px">'+
+      ic(chgUp?'trending_up':'trending_down',chgColor,13)+
+      '<span style="font-size:12px;font-weight:700;color:'+chgColor+';font-family:monospace">'+(chgUp?'+':'')+fmt(totalChangeValue)+' ('+(chgUp?'+':'')+aggPct.toFixed(2)+'%) today</span>'+
+    '</div>':
+    '<div style="font-size:11px;color:var(--muted);margin-top:8px">Tap refresh to load today’s change</div>';
+
+  var refreshBtn='<button onclick="event.stopPropagation();window.refreshSharePrices({manual:true})" '+(refreshing?'disabled':'')+' aria-label="Refresh share prices" title="Refresh share prices" style="'+S({background:td('accent'),border:'1px solid '+ac+'33',borderRadius:'9px',width:'34px',height:'34px',display:'flex',alignItems:'center',justifyContent:'center',cursor:refreshing?'default':'pointer',flexShrink:0,opacity:refreshing?'.5':'1'})+'">'+ic('refresh',ac,16)+'</button>';
+
+  /* Hero card: reuses heroRingWrap() — the exact wrapper the Net Worth and
+     Overview hero cards use — and the same 28px/800/monospace "big number"
+     treatment as the Net Worth total, so the Portfolio tab's headline figure
+     looks consistent with the rest of the app rather than introducing a new
+     serif webfont (none is bundled — this app must work offline). */
+  var hero=heroRingWrap(
+    '<div style="padding:16px 20px">'+
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">'+
+        '<span style="flex:1;font-size:10px;color:'+ac+';font-weight:600;text-transform:uppercase;letter-spacing:.06em;opacity:.8">Total Portfolio Value</span>'+
+        refreshBtn+
+      '</div>'+
+      '<div class="'+(refreshing?'shimmer':'')+'" style="font-size:28px;font-weight:800;color:'+ac+';font-family:monospace;line-height:1.1">'+fmt(totalValue)+'</div>'+
+      heroTrend+
+    '</div>'
+  );
+
+  /* Three honest stat cards — Holdings count, real Today's Change, and the
+     real Last Updated timestamp — in place of the reference mock's fabricated
+     "Monthly ROI" / "Risk Level" cards (this app has no cost-basis history to
+     compute ROI, and no risk model). */
+  var statsRow='<div style="display:flex;gap:8px;margin-bottom:12px">'+
+    statCard(ic('portfolio',ac,15),'Holdings',String(holdings.length),holdings.length===1?'position':'positions',ac,td('accent'))+
+    statCard(ic(haveChangeData?(chgUp?'trending_up':'trending_down'):'clock',chgColor,15),"Today's Change",haveChangeData?((chgUp?'+':'')+aggPct.toFixed(2)+'%'):'—',haveChangeData?((chgUp?'+':'')+fmt(totalChangeValue)):'No data yet',chgColor,haveChangeData?(chgUp?td('accent'):td('red')):'var(--surface)')+
+    statCard(ic('clock','var(--muted)',15),'Last Updated',luDisplay,luSub,'var(--muted)','var(--surface)')+
+  '</div>';
+
+  var q=state._portfolioSearch||'';
+  var searchBar='<div style="position:relative;margin-bottom:10px">'+
+    '<span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex">'+ic('search','var(--muted)',15)+'</span>'+
+    '<input id="portfolio-search-input" type="text" placeholder="Search ticker or name" value="'+escHtml(q)+'" oninput="setPortfolioSearchSilent(this.value)" style="'+S({width:'100%',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:'11px',padding:'10px 34px 10px 34px',color:'var(--text)',fontSize:'13px',fontFamily:'inherit'})+'"/>'+
+    (q?'<button onclick="clearPortfolioSearch()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;padding:4px;display:flex" aria-label="Clear search">'+ic('x','var(--muted)',14)+'</button>':'')+
+  '</div>';
+
+  var listHTML='<div id="portfolio-list">'+_buildPortfolioListHTML()+'</div>';
+
+  return hero+statsRow+searchBar+'<div style="margin-bottom:12px">'+addBtnHTML()+'</div>'+listHTML;
+}
+
 
 /* ─── Before-pay total ──────────────────────────────────────────────────────
    Unpaid, unskipped bills + expenses falling due from today up to (but not
@@ -11646,6 +11875,7 @@ function renderModal(){
     if(_upM.showCalendarTab!==false)allM.push(["calendar","Calendar","calendar"]);
     if(_upM.showMoneyTab!==false)allM.push(["money","Recurring","wallet"]);
     if(_upM.showBudgetsTab!==false)allM.push(["budgets","Budgets","budgets"]);
+    if(_upM.showPortfolioTab!==false)allM.push(["portfolio","Portfolio","portfolio"]);
     var prefM=['overview','calendar','budgets'];
     var primM=[];
     prefM.forEach(function(k){var t=allM.filter(function(x){return x[0]===k;})[0];if(t)primM.push(t);});
@@ -12483,6 +12713,7 @@ function renderSettingsSectionModal(section){
       uiToggleRow2('showCalendarTab','Calendar tab','Monthly calendar view with balance forecasts per day')+
       uiToggleRow2('showBudgetsTab','Budgets tab','Set spending limits and view category spend bar')+
       uiToggleRow2('showMoneyTab','Recurring tab','Combined Income, Bills, Expenses and Transfers in one tab')+
+      uiToggleRow2('showPortfolioTab','Portfolio tab','Track your real stock and ETF holdings with live prices and daily change')+
 
       '<div style="font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin:12px 0 6px;padding:0 2px">Recurring tab sections</div>'+
       uiToggleRow2('showBillsTab','Bills section','Recurring fixed bills')+
@@ -12809,7 +13040,7 @@ window.setUIPref=function(key,val){
   if(!state.uiPrefs)state.uiPrefs={};
   state.uiPrefs[key]=(val==='1'||val===true);
   /* If hiding a tab and currently on it, switch to overview */
-  var tabMap={showMoneyTab:'money',showCalendarTab:'calendar',showBudgetsTab:'budgets'};
+  var tabMap={showMoneyTab:'money',showCalendarTab:'calendar',showBudgetsTab:'budgets',showPortfolioTab:'portfolio'};
   var hiddenTab=tabMap[key];
   if(hiddenTab&&!state.uiPrefs[key]&&state.tab===hiddenTab)state.tab='overview';
   /* Money sub-sections: if the active section is hidden, switch to another available one */
@@ -14935,6 +15166,7 @@ function render(){
          state.tab==="calendar"?renderCalendarTab():
          state.tab==="money"?renderMoneyTab():
          state.tab==="budgets"?renderBudgetsTab():
+         state.tab==="portfolio"?renderPortfolioTab():
          state.tab==="transactions"?renderTransactionsTab():renderOverview();
   var fab;
   var fabBottom='calc('+NAV_H+'px + 18px)';
@@ -14946,7 +15178,7 @@ function render(){
      and Recurring (v53.9/v53.30), so the corner FAB is redundant there. */
   /* Compact bar is the only nav (v53.32): its centre + covers Overview,
      Calendar and Recurring, so the corner FAB never shows there. */
-  if(state.tab!=="transactions"&&state.tab!=="budgets"&&state.tab!=="overview"&&state.tab!=="calendar"&&state.tab!=="money"){
+  if(state.tab!=="transactions"&&state.tab!=="budgets"&&state.tab!=="overview"&&state.tab!=="calendar"&&state.tab!=="money"&&state.tab!=="portfolio"){
     fab='<button onclick="openAddPicker()" style="position:fixed;bottom:'+fabBottom+';right:'+fabRight+';width:54px;height:54px;border-radius:50%;background:'+ac_fab+';border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 24px '+ac_fab+'66;display:flex;align-items:center;justify-content:center;z-index:110;color:'+at_fab+';font-family:inherit">+</button>';
   } else {
     fab='';

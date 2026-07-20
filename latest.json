@@ -1,8 +1,8 @@
 {
-  "version": "56.0",
-  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v56.0.zip",
+  "version": "57.0",
+  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v57.0.zip",
   "notes": [
-    "The asset and debt cards on the Net Worth screen now carry a soft top-lit wash of their own colour \\u2014 green for assets, shares, mortgages and loans, red for debts \\u2014 instead of sitting flat white in the light theme. The tint comes from each theme's own palette, so every theme (including both mono modes) keeps its character.",
-    "The Add New menu has proper depth: each option is now a layered gradient card in its type colour with a matching icon chip, a short line explaining what it does, and a chevron \\u2014 replacing the flat single-tint rows."
+    "New Portfolio tab (5th bottom nav tab, off by default toggle in Settings > Layout \u2014 on by default): a dedicated view of your real share holdings, with a total-value hero card, a real Today's Change figure once you've refreshed prices, and a searchable list. Adding and editing holdings uses the same Add Shares / Edit Shares screens as Net Worth, so there's still just one place your holdings live.",
+    "Share price refreshes now also capture the day's real percentage and dollar change from Yahoo Finance where available, shown as green/red pills on each holding."
   ]
 }
