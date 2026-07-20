@@ -1,8 +1,8 @@
 {
-  "version": "57.0",
-  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v57.0.zip",
-  "notes": [
-    "New Portfolio tab (5th bottom nav tab, off by default toggle in Settings > Layout \u2014 on by default): a dedicated view of your real share holdings, with a total-value hero card, a real Today's Change figure once you've refreshed prices, and a searchable list. Adding and editing holdings uses the same Add Shares / Edit Shares screens as Net Worth, so there's still just one place your holdings live.",
-    "Share price refreshes now also capture the day's real percentage and dollar change from Yahoo Finance where available, shown as green/red pills on each holding."
-  ]
+    "version":  "57.0",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v57.0.zip",
+    "notes":  [
+                  "New Portfolio tab (5th bottom nav tab, off by default toggle in Settings \u003e Layout — on by default): a dedicated view of your real share holdings, with a total-value hero card, a real Today\u0027s Change figure once you\u0027ve refreshed prices, and a searchable list. Adding and editing holdings uses the same Add Shares / Edit Shares screens as Net Worth, so there\u0027s still just one place your holdings live.",
+                  "Share price refreshes now also capture the day\u0027s real percentage and dollar change from Yahoo Finance where available, shown as green/red pills on each holding."
+              ]
 }
