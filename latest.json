@@ -1,7 +1,7 @@
 {
-    "version":  "58.4",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v58.4.zip",
-    "notes":  [
-                  "New \"Luxe\" layout for the Transactions tab: a trial row style with a circular category icon, merchant name, category (and time when set) as a subtitle, and the account name under the amount. Toggle it on/off with the new layout button beside History — your choice is remembered."
-              ]
+  "version": "59.0",
+  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v59.0.zip",
+  "notes": [
+    "What's New, Check for Updates and the Update available banner now report the actual error (via an alert) if the OTA module fails to run, instead of silently doing nothing \\u2014 needed to diagnose an OTA/update-check issue that showed no visible failure on tap."
+  ]
 }

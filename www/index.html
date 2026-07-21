@@ -58,7 +58,7 @@ body.okuyasu #bg-blobs{background:linear-gradient(315deg,rgba(74,46,143,0.22) 0%
   } catch(e){}
 })();
 </script>
-<title>finance-tracker v56.0</title>
+<title>finance-tracker v59.0</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-serif}
@@ -421,10 +421,36 @@ body.dark select option{background:#13161F}
 <div id="bg-blobs"></div>
 <div id="root"></div>
 <script>
-var APP_VERSION="57.0";
+var APP_VERSION="59.0";
 /* ── Changelog: shown after an update installs. Keyed by app version. ──────────
    Add a new entry each release with short, user-facing bullet points. ────────── */
 var CHANGELOG = {
+  "59.0": [
+    "What's New, Check for Updates and the Update available banner now report the actual error (via an alert) if the OTA module fails to run, instead of silently doing nothing \u2014 needed to diagnose an OTA/update-check issue that showed no visible failure on tap."
+  ],
+  "58.4": [
+    "New \"Luxe\" layout for the Transactions tab: a trial row style with a circular category icon, merchant name, category (and time when set) as a subtitle, and the account name under the amount. Toggle it on/off with the new layout button beside History — your choice is remembered."
+  ],
+  "58.3": [
+    "New Remaining Budget card at the top of the Budgets tab: total left across every category with a target set, the overall % used, and a Daily limit advice figure (your remaining budget divided across the days left in the month) with a month-progress bar underneath. Shows \"Over budget by\" instead once your targets are exceeded."
+  ],
+  "58.2": [
+    "Portfolio is no longer a separate 5th bottom-nav tab — tapping the Net Worth pill now opens its hero card, Stocks/Mortgages/Assets/Debts sub-tabs and search in one place, so your whole net worth (including holdings) lives behind a single Net Worth button.",
+    "Redesigned the Stocks list row: a circular ticker-initial avatar with the ticker and company name stacked beside it, and value/today's change stacked on the right — all colours drawn from your current theme, not fixed colours.",
+    "Fixed a bug where a share holding excluded from your net worth total had no way to be ticked back in from the Stocks list (every other item type already had this toggle) — which could make the total read $0 or too low even though holdings were still listed. The include/exclude checkbox now appears on every share row too."
+  ],
+  "58.1": [
+    "Redesigned the Budgets tab's category cards: each one now leads with the category icon and name, an at-a-glance \"X% Used\" badge, a three-column Spent / Scheduled / Target row, and a single progress bar underneath.",
+    "New Efficiency Score card at the top of the Budgets tab: a 0-100 score with an Optimal / Good / Watch / Over Budget label, how this month's spending compares to last month (or your recent average if last month has no data), and a one-line callout of the category you saved the most on and the one you spent more on."
+  ],
+  "58.0": [
+    "Default categories overhauled: the old 8-bucket list (Housing, Utilities, Health, Transport, Entertainment, Food, Subscriptions, Other) is replaced by a 100-category taxonomy across 12 fiscal groups (Housing & Utilities, Food & Dining, Transportation, Health & Wellness, Personal Care, Shopping & Lifestyle, Entertainment & Leisure, Travel, Education, Financial & Legal, Family & Pets, Business & Work). Your existing bills, expenses, budgets and scheduled overrides are automatically remapped to the closest new category — nothing needs re-tagging.",
+    "The category picker now groups categories under their fiscal group with a search box up top, so finding one in the larger list stays quick.",
+    "New Settings > Custom Categories toggle: \"Category icon colour\" — Gold renders every default and custom category icon in one gold tone; By group keeps each fiscal group's own colour (used in charts and budget bars). Five new icons (Flame, Truck, Shirt, Shoe, Legal scale) were added to the shared icon library to cover the new categories, and are also selectable for custom categories."
+  ],
+  "57.1": [
+    "The Portfolio tab now has four sub-tabs — Stocks, Mortgages, Assets, Debts — so you can browse your whole net worth by category in one place, not just share holdings. Mortgages also includes other loans (car, personal), same grouping as the Net Worth screen. Adding, editing and deleting still uses the same screens as Net Worth, so nothing lives in two places."
+  ],
   "57.0": [
     "New Portfolio tab (5th bottom nav tab, off by default toggle in Settings > Layout — on by default): a dedicated view of your real share holdings, with a total-value hero card, a real Today's Change figure once you've refreshed prices, and a searchable list. Adding and editing holdings uses the same Add Shares / Edit Shares screens as Net Worth, so there's still just one place your holdings live.",
     "Share price refreshes now also capture the day's real percentage and dollar change from Yahoo Finance where available, shown as green/red pills on each holding."
@@ -1361,7 +1387,14 @@ var P={
   accent:"#3DE89A",accentText:"#0B1A13",
   red:"#E04060",blue:"#4488DD",
   purple:"#9A68E0",yellow:"#E0B83A",
-  orange:"#D97030",green:"#1EAA50"
+  orange:"#D97030",green:"#1EAA50",
+  /* v58.0: extended so every one of the 12 category fiscal groups gets its own
+     hue (used when the "Gold category icons" preference is off), plus gold —
+     the premium single-tone treatment used across default + custom icons when
+     that preference is on. */
+  pink:"#E0609E",teal:"#22B8A0",cyan:"#33A9E0",
+  indigo:"#6C6FE0",brown:"#B08050",slate:"#7A8CA3",
+  gold:"#D4AF37"
 };
 
 /* ─── SVG Icon system ─────────────────────────────────────────────────────────
@@ -1741,21 +1774,28 @@ var _SVG_PATHS={
   cloud_upload:'<path d="M7 18.6h-.4A4.3 4.3 0 016 10.1a6 6 0 0111.7-1.5 4 4 0 01-.4 8h-.3" stroke="C" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 20.6v-7.4M9.2 15.9l2.8-2.7 2.8 2.7" stroke="C" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
   cloud_download:'<path d="M7 18.6h-.4A4.3 4.3 0 016 10.1a6 6 0 0111.7-1.5 4 4 0 01-.4 8h-.3" stroke="C" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 12.4v7.4M9.2 17.1l2.8 2.7 2.8-2.7" stroke="C" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
   infinity:'<path d="M12 12c-2-2.5-4-4-6-4a4 4 0 0 0 0 8c2 0 4-1.5 6-4Zm0 0c2 2.5 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.5-6 4Z" stroke="C" stroke-width="1.6" fill="none"/>',
-  sparkles:'<path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z" stroke="C" stroke-width="1.6" fill="none" stroke-linejoin="round"/><path d="M5 3l.6 1.8L7.4 5l-1.8.6L5 7.4l-.6-1.8L2.6 5l1.8-.6L5 3Z" stroke="C" stroke-width="1.4" fill="none" stroke-linejoin="round"/><path d="M19 15l.5 1.5L21 17l-1.5.5L19 19l-.5-1.5L17 17l1.5-.5L19 15Z" stroke="C" stroke-width="1.4" fill="none" stroke-linejoin="round"/>'
+  sparkles:'<path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z" stroke="C" stroke-width="1.6" fill="none" stroke-linejoin="round"/><path d="M5 3l.6 1.8L7.4 5l-1.8.6L5 7.4l-.6-1.8L2.6 5l1.8-.6L5 3Z" stroke="C" stroke-width="1.4" fill="none" stroke-linejoin="round"/><path d="M19 15l.5 1.5L21 17l-1.5.5L19 19l-.5-1.5L17 17l1.5-.5L19 15Z" stroke="C" stroke-width="1.4" fill="none" stroke-linejoin="round"/>',
+
+  /* ── v58.0: added for the 100-category default taxonomy ── */
+  flame:'<path d="M12 2c2 3-1 4-1 7a3 3 0 0 0 6 0c0-1-.5-2-1-3 2 1 4 4 4 7a8 8 0 0 1-16 0c0-4 3-6 4-9 .5 2 1.5 3 2 3 .5-2 .5-4 2-5z" stroke="C" stroke-width="1.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>',
+  truck:'<rect x="1" y="7" width="13" height="10" rx="1" stroke="C" stroke-width="1.6" fill="none"/><path d="M14 10h4l3 3v4h-3" stroke="C" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="6" cy="18.3" r="1.8" stroke="C" stroke-width="1.5" fill="none"/><circle cx="16.5" cy="18.3" r="1.8" stroke="C" stroke-width="1.5" fill="none"/>',
+  shirt:'<path d="M8 3 3 7l3 3 2-1.5V21h8V8.5L19 10l3-3-5-4a3 3 0 0 1-6 0Z" stroke="C" stroke-width="1.5" fill="none" stroke-linejoin="round"/>',
+  shoe:'<path d="M3 16.5V13a1 1 0 0 1 .6-.9l5-2.2 3.3-2.7a1.3 1.3 0 0 1 1.7 0l1.7 1.4c.4.3.9.5 1.4.5H20a2 2 0 0 1 2 2v3.9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z" stroke="C" stroke-width="1.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="M3 16h19" stroke="C" stroke-width="1.5" stroke-linecap="round"/>',
+  scale:'<path d="M12 3v18M7 21h10" stroke="C" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M12 3l-2.2 4h4.4z" stroke="C" stroke-width="1.5" fill="none" stroke-linejoin="round"/><path d="M5 7h14" stroke="C" stroke-width="1.5" stroke-linecap="round"/><path d="M5 7l-3 6a3.5 3.5 0 0 0 7 0z" stroke="C" stroke-width="1.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="M19 7l-3 6a3.5 3.5 0 0 0 7 0z" stroke="C" stroke-width="1.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>'
 };
 
 /* Ordered list for the icon picker UI */
 var ICON_PICKER_CATS=[
   {section:"Finance",      icons:["coin","wallet","credit_card","bank","safe","receipt","invoice","chart_pie","chart_bar","piggy_bank","trending_up","trending_down","atm","exchange","percent","diamond","coins","money_bag","savings","loan","tax","budget_check","split","cashback","subscription","donation","insurance","portfolio","stock","crypto","mortgage","pension","refund","expense_report"]},
-  {section:"Home",         icons:["home","apartment","key","lightbulb","wifi","phone","tv","music","game","droplet","thermometer","cloud_rain","sofa","bed","bath","washer","fridge","lamp","plant","window","door","garage","fence","stairs","ruler","hammer","paint_roller","blueprint"]},
+  {section:"Home",         icons:["home","apartment","key","lightbulb","wifi","phone","tv","music","game","droplet","thermometer","cloud_rain","sofa","bed","bath","washer","fridge","lamp","plant","window","door","garage","fence","stairs","ruler","hammer","paint_roller","blueprint","flame","truck"]},
   {section:"Food & Drink", icons:["food","coffee","restaurant","pizza","wine","beer","cocktail","cake","ice_cream","apple","bread","salad","cooking_pot","knife","utensils","candy","takeaway","noodles","milk","tea","bbq"]},
   {section:"Health",       icons:["health","medicine","gym","running","heart","pill","stethoscope","bandage","dna","brain","weight","yoga","vitamins","sleep","ambulance","hospital","dental","eye","ear","water_drop","meditation"]},
   {section:"Transport",    icons:["car","bus","train","plane","fuel","bike","taxi","motorcycle","scooter","ship","submarine","rocket","helicopter","parking","road","tunnel","compass","map","luggage","ticket","passport","suitcase"]},
-  {section:"Work",         icons:["briefcase","laptop","tools","pen","graduation","book","pencil","library","diploma","test","atom","flask","microscope","chess","target","award","trophy","medal","office","meeting","handshake","contract","presentation","clipboard","chart_line","analytics"]},
+  {section:"Work",         icons:["briefcase","laptop","tools","pen","graduation","book","pencil","library","diploma","test","atom","flask","microscope","chess","target","award","trophy","medal","office","meeting","handshake","contract","presentation","clipboard","chart_line","analytics","scale"]},
   {section:"Tech",         icons:["desktop","tablet","watch","printer","keyboard","mouse","cpu","hard_drive","server","battery","bluetooth","signal","antenna","satellite","vr","robot","code_bracket","terminal","database_check"]},
   {section:"Communication",icons:["mail","mail_open","message","message_circle","phone_call","video","podcast","rss","share","at_sign","hash","megaphone","newspaper","qr_code"]},
   {section:"Nature",       icons:["sun","moon","tree","cloud_icon","zap","map_pin","globe","snow","wind","storm","rainbow","sunrise","mountain","waves","leaf","seedling","flower","mushroom","cactus","palm"]},
-  {section:"Lifestyle",    icons:["shopping_bag","shopping_cart","tag","scissors","camera","mic","headphones","bell","film","paintbrush","palette","dumbbell","swimming","hiking","football","golf","tennis","volleyball","bicycle","fishing","gaming2","theater","art","toy"]},
+  {section:"Lifestyle",    icons:["shopping_bag","shopping_cart","tag","scissors","camera","mic","headphones","bell","film","paintbrush","palette","dumbbell","swimming","hiking","football","golf","tennis","volleyball","bicycle","fishing","gaming2","theater","art","toy","shirt","shoe"]},
   {section:"Social",       icons:["users","user","baby","pet","gift","account_group","person_add","person_check","child","elderly","couple","community","volunteer"]},
   {section:"Business",     icons:["calendar_check","clock","alarm","timer","stopwatch","calendar_x"]},
   {section:"Actions",      icons:["star","flag","lock","shield","archive","box","trash","refresh","paperclip","search","filter","sort","download","upload","copy","edit","save","check","x_circle","check_circle","info","warning","plus","minus","more_horizontal","more_vertical","settings2","eye_off","link","external_link","home2","logout","login","night","cloud_upload","cloud_download","infinity","sparkles"]}
@@ -1766,7 +1806,7 @@ var ICON_LABELS={
   /* Finance */
   coin:"Coin",wallet:"Wallet",credit_card:"Card",bank:"Bank",safe:"Safe",receipt:"Receipt",invoice:"Invoice",chart_pie:"Pie Chart",chart_bar:"Bar Chart",piggy_bank:"Piggy Bank",trending_up:"Up",trending_down:"Down",atm:"ATM",exchange:"Exchange",percent:"Percent",diamond:"Diamond",coins:"Coins",money_bag:"Money Bag",savings:"Savings",loan:"Loan",tax:"Tax",budget_check:"Budget",split:"Split",cashback:"Cashback",subscription:"Sub",donation:"Donate",insurance:"Insurance",portfolio:"Portfolio",stock:"Stock",crypto:"Crypto",mortgage:"Mortgage",pension:"Pension",refund:"Refund",expense_report:"Report",
   /* Home */
-  home:"Home",apartment:"Apartment",key:"Key",lightbulb:"Bulb",wifi:"WiFi",phone:"Phone",tv:"TV",music:"Music",game:"Gaming",droplet:"Water",thermometer:"Temp",cloud_rain:"Rain",sofa:"Sofa",bed:"Bed",bath:"Bath",washer:"Washer",fridge:"Fridge",lamp:"Lamp",plant:"Plant",window:"Window",door:"Door",garage:"Garage",fence:"Fence",stairs:"Stairs",ruler:"Ruler",hammer:"Hammer",paint_roller:"Paint",blueprint:"Blueprint",
+  home:"Home",apartment:"Apartment",key:"Key",lightbulb:"Bulb",wifi:"WiFi",phone:"Phone",tv:"TV",music:"Music",game:"Gaming",droplet:"Water",thermometer:"Temp",cloud_rain:"Rain",sofa:"Sofa",bed:"Bed",bath:"Bath",washer:"Washer",fridge:"Fridge",lamp:"Lamp",plant:"Plant",window:"Window",door:"Door",garage:"Garage",fence:"Fence",stairs:"Stairs",ruler:"Ruler",hammer:"Hammer",paint_roller:"Paint",blueprint:"Blueprint",flame:"Flame",truck:"Truck",
   /* Food */
   food:"Food",coffee:"Coffee",restaurant:"Dining",pizza:"Pizza",wine:"Wine",beer:"Beer",cocktail:"Cocktail",cake:"Cake",ice_cream:"Ice Cream",apple:"Apple",bread:"Bread",salad:"Salad",cooking_pot:"Pot",knife:"Knife",utensils:"Utensils",candy:"Candy",takeaway:"Takeaway",noodles:"Noodles",milk:"Milk",tea:"Tea",bbq:"BBQ",
   /* Health */
@@ -1774,7 +1814,7 @@ var ICON_LABELS={
   /* Transport */
   car:"Car",bus:"Bus",train:"Train",plane:"Flight",fuel:"Fuel",bike:"Bike",taxi:"Taxi",motorcycle:"Moto",scooter:"Scooter",ship:"Ship",submarine:"Sub",rocket:"Rocket",helicopter:"Heli",parking:"Parking",road:"Road",tunnel:"Tunnel",compass:"Compass",map:"Map",luggage:"Luggage",ticket:"Ticket",passport:"Passport",suitcase:"Suitcase",
   /* Work & Education */
-  briefcase:"Work",laptop:"Laptop",tools:"Tools",pen:"Pen",graduation:"Education",book:"Books",pencil:"Pencil",library:"Library",diploma:"Diploma",test:"Test",atom:"Science",flask:"Lab",microscope:"Micro",chess:"Chess",target:"Target",award:"Award",trophy:"Trophy",medal:"Medal",office:"Office",meeting:"Meeting",handshake:"Deal",contract:"Contract",presentation:"Slides",clipboard:"Clipboard",chart_line:"Chart",analytics:"Analytics",
+  briefcase:"Work",laptop:"Laptop",tools:"Tools",pen:"Pen",graduation:"Education",book:"Books",pencil:"Pencil",library:"Library",diploma:"Diploma",test:"Test",atom:"Science",flask:"Lab",microscope:"Micro",chess:"Chess",target:"Target",award:"Award",trophy:"Trophy",medal:"Medal",office:"Office",meeting:"Meeting",handshake:"Deal",contract:"Contract",presentation:"Slides",clipboard:"Clipboard",chart_line:"Chart",analytics:"Analytics",scale:"Legal",
   /* Tech */
   desktop:"Desktop",tablet:"Tablet",watch:"Watch",printer:"Printer",keyboard:"Keyboard",mouse:"Mouse",cpu:"CPU",hard_drive:"Drive",server:"Server",battery:"Battery",bluetooth:"BT",signal:"Signal",antenna:"Antenna",satellite:"Satellite",vr:"VR",robot:"Robot",code_bracket:"Code",terminal:"Terminal",database_check:"DB",
   /* Communication */
@@ -1782,7 +1822,7 @@ var ICON_LABELS={
   /* Nature */
   sun:"Sun",moon:"Moon",tree:"Tree",cloud_icon:"Cloud",zap:"Energy",map_pin:"Location",globe:"Global",snow:"Snow",wind:"Wind",storm:"Storm",rainbow:"Rainbow",sunrise:"Sunrise",mountain:"Mountain",waves:"Waves",leaf:"Leaf",seedling:"Seedling",flower:"Flower",mushroom:"Mushroom",cactus:"Cactus",palm:"Palm",
   /* Lifestyle */
-  shopping_bag:"Shopping",shopping_cart:"Cart",tag:"Tag",scissors:"Scissors",camera:"Camera",mic:"Mic",headphones:"Audio",bell:"Alert",film:"Film",paintbrush:"Brush",palette:"Palette",dumbbell:"Weights",swimming:"Swim",hiking:"Hiking",football:"Football",golf:"Golf",tennis:"Tennis",volleyball:"Volleyball",bicycle:"Bicycle",fishing:"Fishing",gaming2:"Games",theater:"Theater",art:"Art",toy:"Toys",
+  shopping_bag:"Shopping",shopping_cart:"Cart",tag:"Tag",scissors:"Scissors",camera:"Camera",mic:"Mic",headphones:"Audio",bell:"Alert",film:"Film",paintbrush:"Brush",palette:"Palette",dumbbell:"Weights",swimming:"Swim",hiking:"Hiking",football:"Football",golf:"Golf",tennis:"Tennis",volleyball:"Volleyball",bicycle:"Bicycle",fishing:"Fishing",gaming2:"Games",theater:"Theater",art:"Art",toy:"Toys",shirt:"Shirt",shoe:"Shoe",
   /* Social */
   users:"Family",user:"Person",baby:"Baby",pet:"Pet",gift:"Gift",account_group:"Group",person_add:"Add Person",person_check:"Verified",child:"Child",elderly:"Elderly",couple:"Couple",community:"Community",volunteer:"Volunteer",
   /* Business */
@@ -2071,16 +2111,113 @@ window.setBalThreshold=function(i,v){
   persist();render();
 };
 
-var DEFAULT_CATS=[
-  {key:"housing",icon:"housing",color:P.blue,label:"Housing"},
-  {key:"utilities",icon:"utilities",color:P.yellow,label:"Utilities"},
-  {key:"health",icon:"health",color:P.accent,label:"Health"},
-  {key:"transport",icon:"transport",color:P.purple,label:"Transport"},
-  {key:"entertainment",icon:"entertainment",color:P.orange,label:"Entertainment"},
-  {key:"food",icon:"food",color:P.red,label:"Food"},
-  {key:"subscriptions",icon:"subscriptions",color:"#F472B6",label:"Subscriptions"},
-  {key:"other",icon:"other",color:"#6B7590",label:"Other"}
-];
+/* v58.0: default expense categories — 100-item taxonomy across 12 fiscal groups,
+   replacing the old 8-bucket list. Each category carries its fiscal `group` (used
+   to render section headers in the category picker) and a `gcolor` — the group's
+   own hue, shared by every category inside it. `color` is what actually renders;
+   it starts equal to gcolor and is swapped for P.gold everywhere at read time
+   when the "Gold category icons" preference is on (see catColor()/catInfo()).
+   Native port note: this is a flat array of plain {key,icon,color,label,group}
+   records — trivial to ship as a bundled JSON resource on iOS/Android. */
+var CAT_GROUP_COLORS={
+  "Housing & Utilities":P.blue,"Food & Dining":P.orange,"Transportation":P.purple,
+  "Health & Wellness":P.red,"Personal Care":P.pink,"Shopping & Lifestyle":P.teal,
+  "Entertainment & Leisure":P.yellow,"Travel":P.cyan,"Education":P.indigo,
+  "Financial & Legal":P.green,"Family & Pets":P.brown,"Business & Work":P.slate
+};
+function _mkCats(group,rows){
+  var gc=CAT_GROUP_COLORS[group];
+  return rows.map(function(r){return {key:r[0],icon:r[1],color:gc,label:r[2],group:group};});
+}
+var DEFAULT_CATS=[].concat(
+  _mkCats("Housing & Utilities",[
+    ["rent","home","Rent"],["mortgage","bank","Mortgage"],["property_tax","tax","Property Tax"],
+    ["home_insurance","insurance","Home Insurance"],["electricity","zap","Electricity"],
+    ["water","droplet","Water"],["natural_gas","flame","Natural Gas"],["internet","wifi","Internet"],
+    ["cable_tv","tv","Cable/Satellite TV"],["trash_recycling","trash","Trash/Recycling"],
+    ["home_maintenance","hammer","Home Maintenance"],["security_system","lock","Security System"],
+    ["gardening","plant","Gardening/Landscaping"],["hoa_fees","apartment","HOA Fees"],
+    ["moving_expenses","truck","Moving Expenses"]
+  ]),
+  _mkCats("Food & Dining",[
+    ["groceries","shopping_cart","Groceries"],["restaurants","restaurant","Restaurants"],
+    ["fast_food","pizza","Fast Food"],["coffee_shops","coffee","Coffee Shops"],
+    ["bars_nightlife","cocktail","Bars/Nightlife"],["alcohol_liquor","wine","Alcohol/Liquor Store"],
+    ["food_delivery","takeaway","Food Delivery"],["fine_dining","utensils","Fine Dining"]
+  ]),
+  _mkCats("Transportation",[
+    ["gas_fuel","fuel","Gas/Fuel"],["public_transit","bus","Public Transit"],
+    ["rideshare","taxi","Rideshare (Uber/Lyft)"],["parking","parking","Parking"],
+    ["tolls","road","Tolls"],["car_insurance","insurance","Car Insurance"],
+    ["car_maintenance","tools","Car Maintenance/Repair"],
+    ["vehicle_registration","invoice","Vehicle Registration"],
+    ["car_loan_lease","loan","Car Loan/Lease"],["micro_mobility","bike","Bicycles/Micro-mobility"]
+  ]),
+  _mkCats("Health & Wellness",[
+    ["health_insurance","insurance","Health Insurance"],["pharmacy","pill","Pharmacy/Prescriptions"],
+    ["doctor","stethoscope","Doctor/Specialist"],["dentist","dental","Dentist"],
+    ["vision","eye","Vision/Optometry"],["gym_membership","gym","Gym/Fitness Membership"],
+    ["personal_trainer","weight","Personal Trainer"],["spa_massage","meditation","Spa/Massage"],
+    ["mental_health","brain","Mental Health/Therapy"],["sports_equipment","dumbbell","Sports Equipment"]
+  ]),
+  _mkCats("Personal Care",[
+    ["haircut_salon","scissors","Haircut/Salon"],["nail_salon","sparkles","Nail Salon"],
+    ["skincare","flower","Skincare/Cosmetics"],["toiletries","bath","Toiletries"]
+  ]),
+  _mkCats("Shopping & Lifestyle",[
+    ["clothing","shirt","Clothing"],["shoes","shoe","Shoes"],["electronics","desktop","Electronics"],
+    ["home_decor","lamp","Home Decor"],["furniture","sofa","Furniture"],
+    ["jewelry","diamond","Jewelry/Accessories"],["books_media","book","Books/Media"],
+    ["hobbies","palette","Hobbies"],["sporting_goods","volleyball","Sporting Goods"],
+    ["toys_games","toy","Toys/Games"]
+  ]),
+  _mkCats("Entertainment & Leisure",[
+    ["movies_cinema","film","Movies/Cinema"],["concerts","music","Concerts/Live Music"],
+    ["streaming_services","video","Streaming Services (Netflix/Spotify)"],
+    ["gaming","gaming2","Gaming/Video Games"],["sporting_events","ticket","Sporting Events"],
+    ["arts_museums","art","Arts/Museums"],["newspapers_magazines","newspaper","Newspapers/Magazines"]
+  ]),
+  _mkCats("Travel",[
+    ["flights","plane","Flights"],["hotels_lodging","bed","Hotels/Lodging"],
+    ["rental_cars","car","Rental Cars"],["vacation_packages","luggage","Vacation Packages"],
+    ["cruises","ship","Cruises"],["passport_visa","passport","Passport/Visa Fees"]
+  ]),
+  _mkCats("Education",[
+    ["tuition","graduation","Tuition"],["student_loans","loan","Student Loans"],
+    ["textbooks","book","Textbooks"],["courses_certifications","diploma","Courses/Certifications"],
+    ["school_supplies","pencil","School Supplies"]
+  ]),
+  _mkCats("Financial & Legal",[
+    ["savings_deposit","savings","Savings Deposit"],["investment","trending_up","Investment (Stocks/Crypto)"],
+    ["retirement","pension","Retirement Contribution (401k/IRA)"],
+    ["credit_card_payment","credit_card","Credit Card Payment"],
+    ["interest_expense","percent","Interest Expense"],["bank_fees","bank","Bank Fees"],
+    ["atm_fee","atm","ATM Fee"],["taxes","tax","Taxes (Federal/State)"],
+    ["legal_fees","scale","Legal Fees"],["accountant_tax_prep","expense_report","Accountant/Tax Prep"],
+    ["charitable_donations","donation","Charitable Donations"]
+  ]),
+  _mkCats("Family & Pets",[
+    ["childcare","baby","Childcare/Daycare"],["child_support","child","Child Support"],
+    ["school_extracurriculars","medal","School/Extracurriculars"],
+    ["baby_supplies","gift","Baby Supplies"],["pet_food","pet","Pet Food"],
+    ["veterinary_care","hospital","Veterinary Care"],["pet_insurance","insurance","Pet Insurance"],
+    ["pet_grooming","scissors","Pet Grooming/Boarding"]
+  ]),
+  _mkCats("Business & Work",[
+    ["office_supplies","paperclip","Office Supplies"],["business_travel","suitcase","Business Travel"],
+    ["professional_dues","account_group","Professional Dues/Subscriptions"],
+    ["marketing_advertising","megaphone","Marketing/Advertising"],
+    ["software_saas","code_bracket","Software/SaaS"],["misc_expense","box","Miscellaneous Expense"]
+  ])
+);
+/* v58.0 migration: old 8-key default categories → their closest new-taxonomy home.
+   Used once by migrateCategoryTaxonomy() below to rewrite existing bills, expenses,
+   category budgets and per-instance overrides so nothing a user already entered
+   silently falls back to an unstyled "Other" bucket. */
+var LEGACY_CAT_MAP={
+  housing:"rent",utilities:"electricity",health:"health_insurance",transport:"gas_fuel",
+  entertainment:"streaming_services",food:"groceries",subscriptions:"software_saas",other:"misc_expense"
+};
 /* INCOME_CATS: separate category list for income items, ordered by most-commonly-used globally */
 var INCOME_CATS=[
   {key:"salary",icon:"salary",color:P.accent,label:"Salary"},
@@ -3204,6 +3341,57 @@ function save(k,v){StorageAdapter.set(ProfileManager.prefix()+k, v);}
   if(changed){ try{ localStorage.setItem('cloudSync.dataChangedAt', new Date().toISOString()); }catch(e){} }
 })();
 
+/* ─── Category taxonomy migration (v58.0) ─────────────────────────────────────
+   DEFAULT_CATS grew from 8 broad buckets to the 100-item taxonomy above, and
+   every key changed (e.g. "housing" → "rent"). This one-time pass rewrites
+   .category on every bill/expense, every catBudgets entry and every saved
+   per-instance override, across every profile, using LEGACY_CAT_MAP — so
+   existing data keeps its icon/colour/label instead of falling back to the
+   generic "Other" box icon. Income categories are untouched: their keys and
+   icons didn't change. The undo-history log (state.history) is intentionally
+   left alone — it's a short-lived action trail, not persistent category data.
+   ──────────────────────────────────────────────────────────────────────── */
+(function migrateCategoryTaxonomy(){
+  if(StorageAdapter.get('catTaxonomyMigrated58', false)) return;
+  StorageAdapter.set('catTaxonomyMigrated58', true);
+  function remapKey(k){return (k!==undefined&&k!==null&&LEGACY_CAT_MAP.hasOwnProperty(k))?LEGACY_CAT_MAP[k]:k;}
+  var profs=StorageAdapter.get('profiles', null);
+  var ids=(profs&&profs.length)?profs.map(function(p){return p.id;}):[1];
+  ids.forEach(function(pid){
+    var pfx='p:'+pid+':';
+    ['bills','expenses'].forEach(function(listKey){
+      var arr=StorageAdapter.get(pfx+listKey, null);
+      if(!arr||!arr.length) return;
+      var changed=false;
+      arr.forEach(function(item){
+        if(item&&item.category&&LEGACY_CAT_MAP.hasOwnProperty(item.category)){
+          item.category=remapKey(item.category);
+          changed=true;
+        }
+      });
+      if(changed) StorageAdapter.set(pfx+listKey, arr);
+    });
+    var cb=StorageAdapter.get(pfx+'catBudgets', null);
+    if(cb){
+      var cbChanged=false,newCb={};
+      Object.keys(cb).forEach(function(k){
+        var nk=remapKey(k);
+        if(nk!==k) cbChanged=true;
+        /* If both an old and already-migrated key land on the same new key, keep the larger budget */
+        newCb[nk]=(newCb[nk]!==undefined)?Math.max(newCb[nk],cb[k]):cb[k];
+      });
+      if(cbChanged) StorageAdapter.set(pfx+'catBudgets', newCb);
+    }
+    StorageAdapter.listKeys(pfx+'inst:').forEach(function(k){
+      var ov=StorageAdapter.get(k, null);
+      if(ov&&ov.category&&LEGACY_CAT_MAP.hasOwnProperty(ov.category)){
+        ov.category=remapKey(ov.category);
+        StorageAdapter.set(k, ov);
+      }
+    });
+  });
+})();
+
 var EMPTY_STATE_FLAG=load("hasData",false);
 
 /* ─── Overview range reset (v53.1) ────────────────────────────────────────────
@@ -3310,7 +3498,8 @@ var state={
       showMoneyTab:true,        /* Combined Money tab (Income/Bills/Expenses/Transfers) */
       showTransactionsTab:true, /* Transactions tab in bottom nav */
       navCompact:true,          /* 4-tab bar with center quick-add; extra tabs under More */
-      heroCatColors:true        /* Colour forecast chart drops by dominant category */
+      heroCatColors:true,       /* Colour forecast chart drops by dominant category */
+      catIconGold:true          /* v58.0: every category icon renders in one gold tone instead of per-group colour */
     };
     var stored=load("uiPrefs",null);
     return stored?Object.assign({},def,stored):def;
@@ -3702,19 +3891,50 @@ function allCats(){return DEFAULT_CATS.concat(state.customCats.filter(function(c
 function allCatsSorted(){return allCats().slice().sort(function(a,b){return a.label.localeCompare(b.label);});}
 /* incomeCats: all categories available for income items — custom cats with scope 'income' or 'both' */
 function incomeCats(){return INCOME_CATS.concat(state.customCats.filter(function(c){return !c.scope||c.scope==='income'||c.scope==='both';}));}
+/* allCatsGrouped: expense categories in taxonomy order, bucketed by fiscal group,
+   for the category picker. Custom categories (no .group) land in one trailing
+   "Custom" bucket so newly-added ones are always easy to find. */
+function allCatsGrouped(){
+  var groups=[],byName={};
+  allCats().forEach(function(c){
+    var g=c.group||"Custom";
+    if(!byName[g]){byName[g]={name:g,items:[]};groups.push(byName[g]);}
+    byName[g].items.push(c);
+  });
+  return groups;
+}
+/* catIconGold: true when the user has chosen the single gold tone for every
+   category icon instead of per-category/per-group colour coding. */
+function catIconGold(){return !!(state.uiPrefs&&state.uiPrefs.catIconGold);}
+/* catColor(c): the colour to actually render a category's icon/tile in — c.color
+   unless Gold mode is on, in which case every real category (not the neutral
+   "Uncategorised" placeholder) renders in P.gold. Never mutates c. */
+function catColor(c){
+  if(!c||!c.color)return c&&c.color;
+  if(c.key===UNCATEGORISED_KEY)return c.color;
+  return catIconGold()?P.gold:c.color;
+}
 function catInfo(key,itemType){
   if(!key||key===UNCATEGORISED_KEY)return UNCATEGORISED_CAT;
+  var found;
   /* Check income-specific list first when type is income */
   if(itemType==="income"){
-    var ic=INCOME_CATS.find(function(c){return c.key===key;});
-    if(ic)return ic;
-    var cc=state.customCats.find(function(c){return c.key===key;});
-    if(cc)return cc;
-    return {icon:"coin",color:P.accent,label:"Income"};
+    found=INCOME_CATS.find(function(c){return c.key===key;})||
+      state.customCats.find(function(c){return c.key===key;})||
+      {icon:"coin",color:P.accent,label:"Income"};
+  } else {
+    found=allCats().find(function(c){return c.key===key;})||
+      state.customCats.find(function(c){return c.key===key;})||
+      {icon:"box",color:"#6B7590",label:key||"Other"};
   }
-  return allCats().find(function(c){return c.key===key;})||
-    state.customCats.find(function(c){return c.key===key;})||
-    {icon:"box",color:"#6B7590",label:key||"Other"};
+  /* Return a shallow copy with the display colour applied — never mutate the
+     shared DEFAULT_CATS/INCOME_CATS/customCats records themselves. */
+  if(found&&found.color&&catIconGold()&&key!==UNCATEGORISED_KEY){
+    var copy={};for(var k in found)copy[k]=found[k];
+    copy.color=P.gold;
+    return copy;
+  }
+  return found;
 }
 /* ── SaveFile (v53.48): a single local save file the app and browser share.
    In desktop browsers with the File System Access API (Chrome/Edge), the app
@@ -5135,12 +5355,16 @@ function _doCloseModal(){
   }
   if(state.modal==='editShare'){
     state._editShareDraft=null;
-    var _rtClose=state._nwReturnTo;state._nwReturnTo=null;
-    setState({modal:_rtClose==='portfolio'?null:'netWorth'});
+    /* Portfolio is no longer a separate tab (v58.1) — Close always reopens
+       the Net Worth modal (which now hosts the Portfolio-style view) rather
+       than special-casing a 'portfolio' returnTo. */
+    state._nwReturnTo=null;
+    setState({modal:'netWorth'});
     return;
   }
   if(state.modal==='liabilityWizard'){
     state._liabWiz=null;
+    state._nwReturnTo=null;
     setState({modal:'netWorth'});
     return;
   }
@@ -5175,9 +5399,7 @@ window.openNetWorthModal=function(){
 window.setNwTab=function(t){state._nwTab=t;state._nwSortMenu=false;state._nwAddMenu=false;patchModal();};
 /* openAddShareFromPortfolio: jumps straight into the Net Worth modal's existing
    Add Shares form (same fields, same addAsset() save path as the Net Worth
-   screen's own Add flow — no separate form is built for the Portfolio tab).
-   Marks _nwReturnTo so Save closes back to the Portfolio tab instead of
-   landing on the Net Worth list. */
+   screen's own Add flow — no separate form is built for the Stocks sub-tab). */
 window.openAddShareFromPortfolio=function(){
   state._nwAddMenu=false;
   state._nwSortMenu=false;
@@ -5186,7 +5408,7 @@ window.openAddShareFromPortfolio=function(){
   state._assetDraft={name:"",value:"",icon:"chart_line",isDebt:false,isShare:true,shareSymbol:"",shareMarket:".AX",shareQty:"",debtOwing:"",debtPayment:"",debtFreqUnit:"months",debtFreqInterval:1,debtStartDate:todayStr,growthAmount:"",growthFreqUnit:"months",growthFreqInterval:1,growthStartDate:todayStr};
   state._shareLookup=null;
   state._nwTab='add';
-  state._nwReturnTo='portfolio';
+  state._nwReturnTo='netWorth';
   setState({modal:'netWorth'});
 };
 window.setNwSort=function(v){state.nwSort=v;save("nwSort",v);patchModal();};
@@ -5301,8 +5523,11 @@ window.addAsset=function(){
     recordHistory("created","Added shares: "+sAsset.name+" ("+sAsset.shareQty+" "+sAsset.shareSymbol+")",{assetId:sAsset.id,assetName:sAsset.name,isShare:true});
     haptic("medium");persist();
     showSimpleToast("Shares added: "+sAsset.name);
-    var _rtAdd=state._nwReturnTo;state._nwReturnTo=null;
-    if(_rtAdd==='portfolio'){setState({modal:null});}else{setNwTab("list");}
+    /* Portfolio is no longer a separate tab (v58.1) — Save always returns to
+       the Net Worth modal's list view (which now hosts the Portfolio-style
+       view), regardless of returnTo. */
+    state._nwReturnTo=null;
+    setNwTab("list");
     /* Fetch the live price right away */
     setTimeout(function(){ try{refreshSharePrices({});}catch(e){} },200);
     return;
@@ -5364,11 +5589,16 @@ window.confirmDeleteAsset=function(){
   var dc=state._assetDeleteConfirm;state._assetDeleteConfirm=null;
   if(!dc)return;
   var fromEditShare=(state.modal==='editShare');
+  var fromLiabWizard=(state.modal==='liabilityWizard');
   deleteAsset(dc.id);
   if(fromEditShare){
     state._editShareDraft=null;
-    var _rtDel=state._nwReturnTo;state._nwReturnTo=null;
-    setState({modal:_rtDel==='portfolio'?null:'netWorth'});
+    state._nwReturnTo=null;
+    setState({modal:'netWorth'});
+  } else if(fromLiabWizard){
+    state._liabWiz=null;
+    state._nwReturnTo=null;
+    setState({modal:'netWorth'});
   }
 };
 function _assetDeleteConfirmHTML(){
@@ -5398,8 +5628,14 @@ var _LIAB_META={
   debt:    {title:'Debt',    icon:'credit_card',secured:false,assetLabel:'',owingLabel:'Amount owing',noun:'debt',intro:'Track what you owe — e.g. Afterpay, a credit card or a personal loan.'}
 };
 function _liabKindOf(a){return a.isMortgage?'mortgage':a.isLoan?'loan':'debt';}
-window.openLiabilityWizard=function(kind,id){
+window.openLiabilityWizard=function(kind,id,returnTo){
   state._openDropdown=null;
+  /* Which screen Save/Delete/Close should land on. Defaults to 'netWorth' —
+     every existing call site (Net Worth's own FAB menu, tapping a Debt/
+     Mortgage/Loan row inside the Net Worth list) omits returnTo and so keeps
+     its exact prior behavior. The Portfolio tab passes 'portfolio' (mirrors
+     openEditShare's returnTo) so it closes straight back to the tab. */
+  state._nwReturnTo=returnTo||'netWorth';
   var a=(id!=null)?(state.assets||[]).find(function(x){return x.id===id;}):null;
   if(a)kind=_liabKindOf(a);
   if(!_LIAB_META[kind])kind='debt';
@@ -5457,6 +5693,7 @@ window.addLiability=function(){
   var wasEdit=(w.editId!=null);
   state._liabWiz=null;haptic('medium');persist();
   showSimpleToast(meta.title+(wasEdit?' updated':' added'));
+  state._nwReturnTo=null;
   setState({modal:'netWorth',_nwTab:'list'});
 };
 window.editAssetField=function(id,k,v){
@@ -5573,8 +5810,8 @@ window.saveEditShare=function(){
   recordHistory('edited',label,{assetId:a.id,assetName:a.name,isShare:true,beforeQty:beforeQty,afterQty:qty,beforePrice:beforePrice,afterPrice:(parseFloat(a.sharePrice)||0)});
   persist();
   state._editShareDraft=null;
-  var _rtSave=state._nwReturnTo;state._nwReturnTo=null;
-  setState({modal:_rtSave==='portfolio'?null:'netWorth'});
+  state._nwReturnTo=null;
+  setState({modal:'netWorth'});
   /* If the symbol/market changed, fetch a fresh price for the new ticker */
   if(symbolChanged)setTimeout(function(){ try{refreshOneShare(a.id);}catch(e){} },200);
 };
@@ -6365,8 +6602,22 @@ window.pickIcon=function(key){
   state._iconPicker=null;patchModal();
 };
 /* ── Category Picker overlay ── */
-window.openCatPicker=function(type,fn){state.catPicker={type:type,fn:fn,newCatMode:false,newCat:{label:"",icon:"lightbulb",color:"#4D9FFF"}};patchModal();};
+window.openCatPicker=function(type,fn){state.catPicker={type:type,fn:fn,newCatMode:false,search:"",newCat:{label:"",icon:"lightbulb",color:"#4D9FFF"}};patchModal();};
 window.closeCatPicker=function(){state.catPicker=null;patchModal();};
+/* Debounced + targeted, like setTxSearchSilent/setHistSearchSilent — patches just
+   the results list so the search input never loses focus mid-keystroke. */
+var _catPickerSearchTimer=null;
+window.setCatPickerSearch=function(v){
+  if(!state.catPicker)return;
+  state.catPicker.search=v;
+  clearTimeout(_catPickerSearchTimer);
+  _catPickerSearchTimer=setTimeout(function(){_patchCatPickerList();},220);
+};
+function _patchCatPickerList(){
+  var list=document.getElementById('catpicker-results');
+  if(!list){patchModal();return;}
+  list.innerHTML=_catPickerListHtml();
+}
 window.pickCat=function(key){
   var p=state.catPicker;if(!p)return;
   /* Call the setter on the parent form */
@@ -7322,7 +7573,7 @@ function _writeSingleProfileData(profileId,data){
   if(data.uiPrefs){
     sv('uiPrefs',data.uiPrefs);
     /* Also update in-memory state so the UI reflects imported prefs immediately */
-    var _uiPDef={navCompact:true,budgetChartStyle:"bars",saveFileAuto:true,heroCatColors:true,showStatCards:true,showPaydayStrip:true,showCatSpendBar:true,showOverviewToggle:true,showHistoryTab:true,showTransfersTab:false,showForecastSection:true,showOverdueSection:true,showIncomeTab:true,showCalendarTab:true,showBudgetsTab:true,showMoneyTab:true,showPortfolioTab:true,showTransactionsTab:true};
+    var _uiPDef={navCompact:true,budgetChartStyle:"bars",saveFileAuto:true,heroCatColors:true,catIconGold:true,showStatCards:true,showPaydayStrip:true,showCatSpendBar:true,showOverviewToggle:true,showHistoryTab:true,showTransfersTab:false,showForecastSection:true,showOverdueSection:true,showIncomeTab:true,showCalendarTab:true,showBudgetsTab:true,showMoneyTab:true,showPortfolioTab:true,showTransactionsTab:true};
     state.uiPrefs=Object.assign({},_uiPDef,data.uiPrefs);
   }
 
@@ -7404,7 +7655,7 @@ function _reloadCurrentProfileState(){
   state.includeInTotalNW=StorageAdapter.get(pfx+'includeInTotalNW',true);
   state.appTitle=StorageAdapter.get(pfx+'appTitle',prof.name);
   state.calWeekStart=StorageAdapter.get(pfx+'calWeekStart',0);
-  var _uiPrefDef={navCompact:true,budgetChartStyle:"bars",saveFileAuto:true,heroCatColors:true,showStatCards:true,showPaydayStrip:true,showCatSpendBar:true,showOverviewToggle:true,showHistoryTab:true,showTransfersTab:false,showForecastSection:true,showOverdueSection:true,showIncomeTab:true,showCalendarTab:true,showBudgetsTab:true,showMoneyTab:true,showPortfolioTab:true,showTransactionsTab:true};
+  var _uiPrefDef={navCompact:true,budgetChartStyle:"bars",saveFileAuto:true,heroCatColors:true,catIconGold:true,showStatCards:true,showPaydayStrip:true,showCatSpendBar:true,showOverviewToggle:true,showHistoryTab:true,showTransfersTab:false,showForecastSection:true,showOverdueSection:true,showIncomeTab:true,showCalendarTab:true,showBudgetsTab:true,showMoneyTab:true,showPortfolioTab:true,showTransactionsTab:true};
   var _uiPrefStored=StorageAdapter.get(pfx+'uiPrefs',null);
   state.uiPrefs=_uiPrefStored?Object.assign({},_uiPrefDef,_uiPrefStored):_uiPrefDef;
   state.upcomingRange=StorageAdapter.get(pfx+'upcomingRange','this_month');
@@ -7764,19 +8015,19 @@ function _buildDemoData(){
       {id:201,name:'Side Projects',amount:180,freqUnit:'months',freqInterval:1,startDate:dOff(-9),category:'tips',dueTime:''}
     ],
     bills:[
-      {id:202,name:'Rent',amount:1750,freqUnit:'months',freqInterval:1,startDate:dOff(-26),category:'housing',autopay:true,dueTime:'09:00'},
-      {id:203,name:'Electricity',amount:130,freqUnit:'months',freqInterval:1,startDate:dOff(-18),category:'utilities',autopay:false,dueTime:''},
-      {id:204,name:'Phone & Internet',amount:75,freqUnit:'months',freqInterval:1,startDate:dOff(-6),category:'utilities',autopay:true,dueTime:''},
-      {id:205,name:'Streaming',amount:19,freqUnit:'months',freqInterval:1,startDate:dOff(-2),category:'entertainment',autopay:true,dueTime:''}
+      {id:202,name:'Rent',amount:1750,freqUnit:'months',freqInterval:1,startDate:dOff(-26),category:'rent',autopay:true,dueTime:'09:00'},
+      {id:203,name:'Electricity',amount:130,freqUnit:'months',freqInterval:1,startDate:dOff(-18),category:'electricity',autopay:false,dueTime:''},
+      {id:204,name:'Phone & Internet',amount:75,freqUnit:'months',freqInterval:1,startDate:dOff(-6),category:'internet',autopay:true,dueTime:''},
+      {id:205,name:'Streaming',amount:19,freqUnit:'months',freqInterval:1,startDate:dOff(-2),category:'streaming_services',autopay:true,dueTime:''}
     ],
     expenses:[
-      {id:206,name:'Groceries',amount:145,freqUnit:'weeks',freqInterval:1,startDate:dOff(-4),category:'food'},
-      {id:207,name:'Fuel',amount:65,freqUnit:'weeks',freqInterval:1,startDate:dOff(-2),category:'transport'},
-      {id:208,name:'Gym',amount:22,freqUnit:'weeks',freqInterval:1,startDate:dOff(-5),category:'health'}
+      {id:206,name:'Groceries',amount:145,freqUnit:'weeks',freqInterval:1,startDate:dOff(-4),category:'groceries'},
+      {id:207,name:'Fuel',amount:65,freqUnit:'weeks',freqInterval:1,startDate:dOff(-2),category:'gas_fuel'},
+      {id:208,name:'Gym',amount:22,freqUnit:'weeks',freqInterval:1,startDate:dOff(-5),category:'gym_membership'}
     ],
     transfers:[],
     nextId:300,customCats:[],
-    catBudgets:{food:700,entertainment:120,transport:320},
+    catBudgets:{groceries:700,streaming_services:120,gas_fuel:320},
     paidInstances:{},instanceOverrides:{},skippedInstances:{},
     history:[],balThresholds:[500,200,0],showOverdueInUpcoming:true,
     sortBy:{income:'manual',bill:'manual',expense:'manual'},
@@ -8767,7 +9018,9 @@ function renderTabs(){
   if(_up.showCalendarTab!==false)tabs.push(["calendar","Calendar","calendar"]);
   if(_up.showMoneyTab!==false)tabs.push(["money","Recurring","wallet"]);
   if(_up.showBudgetsTab!==false)tabs.push(["budgets","Budgets","budgets"]);
-  if(_up.showPortfolioTab!==false)tabs.push(["portfolio","Portfolio","portfolio"]);
+  /* Portfolio is no longer its own bottom-nav tab (v58.1) — its hero/subtabs/
+     search view now renders inside the Net Worth modal instead (see
+     state.modal==="netWorth" below), opened from the header's Net Worth pill. */
   /* Activity tab removed from navigation (v53.31) — all its functionality lives in the Calendar tab now. */
   /* History is no longer a tab — it opens as a sheet from the Activity tab. */
 
@@ -8813,6 +9066,169 @@ function renderTabs(){
   '</div>';
 }
 
+/* ─── Net worth bucketing: single source of truth ───────────────────────────
+   computeNwSections(items): splits any array of asset/debt items into the
+   SAME 4 buckets the Net Worth modal has always used — Shares, Property &
+   Loans ("secured"), Assets, Debts — with the exact same subtotal formulas.
+   The Net Worth modal's grouped list/composition bar AND the Portfolio tab's
+   sub-tab bar both call this (v57.1) — the filter/subtotal logic must never
+   be duplicated inline in two places (this is the same principle the old
+   inline nwSections comment already called out). Sections are returned
+   UNFILTERED (even when empty) — callers that want to hide empty groups
+   (the Net Worth modal) filter the result themselves; callers that want a
+   stable 4-tab bar (the Portfolio tab) do not. */
+function computeNwSections(items){
+  function _netOf(a){return (parseFloat(a.value)||0)-(parseFloat(a.debtOwing)||0);}
+  return [
+    {key:'shares', label:'Shares', items:items.filter(function(a){return !a.isDebt&&a.isShare;}),
+     sub:function(l){return l.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:(parseFloat(a.value)||0));},0);}},
+    {key:'secured',label:'Property & Loans', items:items.filter(function(a){return !a.isDebt&&!a.isShare&&(a.isMortgage||a.isLoan);}),
+     sub:function(l){return l.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:_netOf(a));},0);}},
+    {key:'assets', label:'Assets', items:items.filter(function(a){return !a.isDebt&&!a.isShare&&!a.isMortgage&&!a.isLoan;}),
+     sub:function(l){return l.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:_netOf(a));},0);}},
+    {key:'debts',  label:'Debts', items:items.filter(function(a){return a.isDebt;}), neg:true,
+     sub:function(l){return -l.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:(parseFloat(a.debtOwing)||0));},0);}}
+  ];
+}
+/* nwSecColor(key): shared key→color map so the Net Worth composition bar /
+   group-header dot AND the Portfolio tab's sub-tab bar always use the same
+   hue for the same bucket. Hoisted (v57.1) from the old netWorth-modal-local
+   _nwSecColor — identical values (accent()/typeBlueFg()/typeRedFg() are the
+   same pure theme lookups the old ac_nw/blu_nw/rdFg_nw closures held). */
+function nwSecColor(key){
+  return key==='shares'?(accent()+'99'):(key==='secured'?typeBlueFg():(key==='debts'?typeRedFg():'var(--sub)'));
+}
+/* ── Shared net-worth-item row renderers ──────────────────────────────────
+   Hoisted out of the Net Worth modal (v57.1) so the Portfolio tab's
+   Mortgages/Assets/Debts sub-tabs can reuse the EXACT SAME markup, tap
+   targets and edit/delete flows as the Net Worth screen — one place these
+   rows are drawn, no parallel implementation to drift out of sync. Each
+   function computes its own theme colors via accent()/typeRedFg() (identical
+   values to the old ac_nw/rdFg_nw/at_nw closure variables), so behavior is
+   byte-identical to before this refactor for every existing Net Worth call
+   site (which passes no returnTo and so keeps defaulting to 'netWorth').
+   returnTo (optional) is threaded into openLiabilityWizard the same way
+   openEditShare already takes a returnTo — 'portfolio' when opened from the
+   Portfolio tab so Save/Delete/Close land back there instead of opening the
+   Net Worth sheet on top of it. */
+function nwCheck(a){
+  var ac=accent(),at=accentText();
+  var inc=!a.excludeFromNetWorth;
+  return '<button onclick="event.stopPropagation();toggleAssetInNetWorth('+a.id+')" title="'+(inc?'Counted in net worth — tap to exclude':'Excluded from net worth — tap to include')+'" style="'+S({width:'22px',height:'22px',borderRadius:'6px',border:'2px solid '+(inc?ac:'var(--border)'),background:inc?ac:'transparent',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,padding:'0'})+'">'+(inc?icS('check',at,13):'')+'</button>';
+}
+function renderAssetRow(a,returnTo){
+  var ac=accent(),rdFg=typeRedFg();
+  if(a.isShare)return renderShareRow(a);
+  if(a.isMortgage||a.isLoan)return renderSecuredRow(a,returnTo);
+  var equity=(parseFloat(a.value)||0)-(parseFloat(a.debtOwing)||0);
+  var hasGrowth=a.growthAmount&&a.growthAmount!==0;
+  var hasDebt=parseFloat(a.debtOwing)>0;
+  var growthTag=hasGrowth?'<span style="font-size:9px;font-weight:600;color:'+ac+';background:'+td("accent")+';border-radius:4px;padding:1px 5px;margin-left:4px">↑'+fmt(a.growthAmount)+'/'+( a.growthFreqUnit||'mo').slice(0,2)+'</span>':'';
+  var debtTag=hasDebt?'<span style="font-size:9px;font-weight:600;color:'+rdFg+';background:'+td("red")+';border-radius:4px;padding:1px 5px;margin-left:2px">−'+fmt(a.debtOwing)+' owed</span>':'';
+  var open=!!(state._nwEditOpen&&state._nwEditOpen[a.id]);
+  var editPanel=open?
+    '<div style="border-top:1px solid var(--border);padding:8px 12px">'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">'+
+        '<div>'+
+          '<div style="font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:3px">Asset Value</div>'+
+          '<input type="number" inputmode="decimal" value="'+(a.value||0)+'" style="'+iS()+';font-family:monospace;font-size:13px;font-weight:700" '+
+            'onclick="event.stopPropagation()" oninput="editAssetField('+a.id+',\'value\',this.value)" onblur="saveAssetField('+a.id+',\'value\',this.value)" onchange="saveAssetField('+a.id+',\'value\',this.value)"/>'+
+        '</div>'+
+        (hasDebt?
+          '<div>'+
+            '<div style="font-size:9px;color:'+rdFg+';font-weight:600;text-transform:uppercase;margin-bottom:3px">Owing</div>'+
+            '<input type="number" inputmode="decimal" value="'+(a.debtOwing||0)+'" style="'+iS()+';font-family:monospace;font-size:13px;font-weight:700" '+
+              'onclick="event.stopPropagation()" oninput="editAssetField('+a.id+',\'debtOwing\',this.value)" onblur="saveAssetField('+a.id+',\'debtOwing\',this.value)" onchange="saveAssetField('+a.id+',\'debtOwing\',this.value)"/>'+
+          '</div>'
+        :'')+
+      '</div>'+
+      '<button onclick="event.stopPropagation();requestDeleteAsset('+a.id+')" style="'+S({width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:'6px',background:td('red'),border:'none',color:rdFg,borderRadius:'8px',padding:'8px',cursor:'pointer',fontFamily:'inherit',fontSize:'12px',fontWeight:700,marginTop:'7px'})+'">'+icS('trash','currentColor',13)+' Delete</button>'+
+    '</div>':'';
+  return '<div onclick="toggleNwRowEdit('+a.id+')" style="background:linear-gradient(180deg,'+ac+'12,'+ac+'05),var(--surface);border-radius:10px;border:1px solid '+(open?ac+'44':ac+'26')+';margin-bottom:6px;overflow:hidden;cursor:pointer">'+
+    '<div style="display:flex;align-items:center;gap:9px;padding:10px 12px">'+
+      nwCheck(a)+
+      '<div style="width:36px;height:36px;border-radius:9px;background:'+ac+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(a.icon||'home',ac,20)+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a.name+'</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">'+growthTag+debtTag+'</div>'+
+      '</div>'+
+      '<div style="text-align:right;flex-shrink:0">'+
+        '<div style="font-size:14px;font-weight:700;color:'+ac+';font-family:monospace">'+fmt(parseFloat(a.value)||0)+'</div>'+
+        (hasDebt?'<div style="font-size:10px;color:'+rdFg+';font-family:monospace">equity '+fmt(equity)+'</div>':'')+
+      '</div>'+
+      '<span style="display:flex;flex-shrink:0;margin-left:2px;transform:rotate('+(open?'180deg':'0deg')+');transition:transform .15s">'+ic('down','var(--muted)',13)+'</span>'+
+    '</div>'+
+    editPanel+
+  '</div>';
+}
+function renderDebtRow(a,returnTo){
+  var ac=accent(),rdFg=typeRedFg();
+  var rt=returnTo||'netWorth';
+  var owing=parseFloat(a.debtOwing)||0;
+  var pct=a._origOwing&&a._origOwing>0?Math.round((1-owing/a._origOwing)*100):0;
+  var progressBar=a._origOwing&&a._origOwing>0?
+    '<div style="height:4px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden">'+
+      '<div style="height:100%;background:'+ac+';border-radius:2px;width:'+Math.min(100,pct)+'%"></div>'+
+    '</div>':'';
+  var payTag=a.debtPayment&&a.debtPayment>0?
+    '<span style="font-size:9px;font-weight:600;color:'+ac+';background:'+td("accent")+';border-radius:4px;padding:1px 5px;margin-left:4px">−'+fmt(a.debtPayment)+'/'+( a.debtFreqUnit||'mo').slice(0,2)+'</span>':'';
+  return '<div onclick="openLiabilityWizard(\'debt\','+a.id+',\''+rt+'\')" style="background:linear-gradient(180deg,'+rdFg+'12,'+rdFg+'05),var(--surface);border-radius:10px;border:1px solid '+rdFg+'33;margin-bottom:6px;overflow:hidden;cursor:pointer">'+
+    '<div style="display:flex;align-items:center;gap:9px;padding:10px 12px">'+
+      nwCheck(a)+
+      '<div style="width:36px;height:36px;border-radius:9px;background:'+rdFg+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(a.icon||'credit_card',rdFg,20)+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a.name+'</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">'+payTag+'</div>'+
+        progressBar+
+      '</div>'+
+      '<div style="text-align:right;flex-shrink:0">'+
+        '<div style="font-size:14px;font-weight:700;color:'+rdFg+';font-family:monospace">−'+fmt(owing)+'</div>'+
+        (a._origOwing&&a._origOwing>0?'<div style="font-size:10px;color:var(--muted)">'+(100-pct)+'% remaining</div>':'')+
+      '</div>'+
+      '<button onclick="event.stopPropagation();requestDeleteAsset('+a.id+')" style="background:'+td("red")+';border:none;color:'+rdFg+';border-radius:7px;padding:4px 9px;cursor:pointer;font-family:inherit;font-size:12px;flex-shrink:0;margin-left:6px" title="Delete">'+icS('x','currentColor',14)+'</button>'+
+    '</div>'+
+  '</div>';
+}
+function renderSecuredRow(a,returnTo){
+  var ac=accent(),rdFg=typeRedFg();
+  var rt=returnTo||'netWorth';
+  var kind=_liabKindOf(a),valLabel=a.isLoan?'Value':'Property';
+  var value=parseFloat(a.value)||0;
+  var owing=parseFloat(a.debtOwing)||0;
+  var equity=value-owing;
+  var orig=parseFloat(a._origOwing)||0;
+  var paidPct=orig>0?Math.max(0,Math.min(100,Math.round((1-owing/orig)*100))):0;
+  var rate=parseFloat(a.mortgageRate)||0;
+  var pay=parseFloat(a.debtPayment)||0;
+  var freqShort=(a.debtFreqUnit||'months').slice(0,2);
+  var eqFg=equity>=0?ac:rdFg;
+  var rateTag=rate>0?'<span style="font-size:9px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1px 5px">'+rate+'% p.a.</span>':'';
+  var payTag=pay>0?'<span style="font-size:9px;font-weight:600;color:'+rdFg+';background:'+td("red")+';border-radius:4px;padding:1px 5px">−'+fmt(pay)+'/'+freqShort+'</span>':'';
+  var progress=orig>0?
+    '<div style="margin-top:7px">'+
+      '<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:3px"><span>'+paidPct+'% paid off</span><span>'+fmt(owing)+' left</span></div>'+
+      '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;background:'+ac+';border-radius:2px;width:'+paidPct+'%"></div></div>'+
+    '</div>':'';
+  return '<div onclick="openLiabilityWizard(\''+kind+'\','+a.id+',\''+rt+'\')" style="background:linear-gradient(180deg,'+ac+'12,'+ac+'05),var(--surface);border-radius:10px;border:1px solid '+ac+'26;margin-bottom:6px;overflow:hidden;cursor:pointer">'+
+    '<div style="display:flex;align-items:center;gap:9px;padding:11px 12px">'+
+      nwCheck(a)+
+      '<div style="width:36px;height:36px;border-radius:9px;background:'+ac+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(isIconKey(a.icon)?a.icon:(a.isLoan?'loan':'mortgage'),ac,20)+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a.name+'</div>'+
+        '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:3px">'+
+          '<span style="font-size:9px;color:var(--muted)">'+valLabel+' '+fmt(value)+'</span>'+rateTag+payTag+
+        '</div>'+
+      '</div>'+
+      '<div style="text-align:right;flex-shrink:0">'+
+        '<div style="font-size:14px;font-weight:700;color:'+eqFg+';font-family:monospace">'+fmt(equity)+'</div>'+
+        '<div style="font-size:9px;color:var(--muted);font-weight:600;letter-spacing:.03em">EQUITY</div>'+
+      '</div>'+
+      '<button onclick="event.stopPropagation();requestDeleteAsset('+a.id+')" style="background:'+td("red")+';border:none;color:'+rdFg+';border-radius:7px;padding:4px 9px;cursor:pointer;font-family:inherit;font-size:12px;flex-shrink:0;margin-left:6px" title="Delete">'+icS('x','currentColor',14)+'</button>'+
+    '</div>'+
+    (progress?'<div style="border-top:1px solid var(--border);padding:9px 12px">'+progress+'</div>':'')+
+  '</div>';
+}
+
 /* ─── Portfolio tab ──────────────────────────────────────────────────────────
    A dedicated view of the user's real share holdings (state.assets filtered by
    isShare) — reuses the SAME data, add flow (openAddShareFromPortfolio →
@@ -8846,27 +9262,42 @@ function _portfolioRowHTML(a){
   /* Real data only — a holding that has never been refreshed has no
      shareChangePct, and is shown flat/neutral rather than a fake 0%. */
   var hasChg=a.shareChangePct!=null&&isFinite(a.shareChangePct);
-  var chgUp=hasChg&&a.shareChangePct>=0;
-  var chgColor=hasChg?(chgUp?ac:rdFg):'var(--muted)';
-  var chgBg=hasChg?(chgUp?td('accent'):td('red')):'var(--surface)';
-  var chgTxt=hasChg?((chgUp?'+':'')+a.shareChangePct.toFixed(2)+'%'):'—';
-  var chgIcon=hasChg?ic(chgUp?'trending_up':'trending_down',chgColor,11):'';
+  var chgColor=!hasChg?'var(--muted)':(a.shareChangePct>0?ac:(a.shareChangePct<0?rdFg:'var(--text)'));
+  var chgTxt=hasChg?((a.shareChangePct>0?'+':'')+a.shareChangePct.toFixed(2)+'%'):'—';
+  var sym=(a.shareSymbol||'?').toUpperCase();
+  var avatarLetter=sym.charAt(0)||'?';
+  /* Row layout (v58.1): circular ticker-initial avatar + Ticker/Name stacked
+     on the left, Value/Change stacked on the right — matching the reference
+     brokerage-app card layout, with every colour still theme-driven
+     (accent()/typeRedFg()/var(--text)/var(--muted)) rather than fixed navy/
+     gold. nwCheck(a) is included (was previously missing here) so a share can
+     be ticked back into the net worth total from this row, same as every
+     other Net Worth item type — without it there was no way to undo an
+     accidental exclude, which could make the portfolio total read as $0
+     despite holdings still being present. Market/qty/price/last-updated/
+     refresh move to a quieter second line rather than being dropped, so no
+     information is lost versus the old row. */
   return '<div onclick="openEditShare('+a.id+',\'portfolio\')" style="background:linear-gradient(180deg,'+ac+'12,'+ac+'05),var(--surface);border-radius:10px;border:1px solid '+ac+'26;margin-bottom:6px;overflow:hidden;cursor:pointer">'+
-    '<div style="display:flex;align-items:center;gap:9px;padding:11px 12px">'+
-      '<div style="width:36px;height:36px;border-radius:9px;background:'+ac+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(isIconKey(a.icon)?a.icon:'chart_line',ac,20)+'</div>'+
+    '<div style="display:flex;align-items:center;gap:9px;padding:11px 12px 6px">'+
+      nwCheck(a)+
+      '<div style="width:36px;height:36px;border-radius:50%;background:'+ac+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+
+        '<span style="font-size:14px;font-weight:800;color:'+ac+';font-family:monospace">'+escHtml(avatarLetter)+'</span>'+
+      '</div>'+
       '<div style="flex:1;min-width:0">'+
-        '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(a.name||'')+'</div>'+
-        '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:2px">'+
-          '<span style="font-size:9px;font-weight:700;color:'+ac+';background:'+td("accent")+';border-radius:4px;padding:1px 5px;font-family:monospace">'+escHtml(a.shareSymbol||'')+' · '+_shareMarketShort(a.shareMarket)+'</span>'+
-          '<span class="'+(refreshing?'shimmer':'')+'" style="font-size:10px;color:var(--muted)">'+(qty%1===0?qty:qty.toFixed(2))+' @ '+fmt(price)+(cur?' '+cur:'')+'</span>'+
-        '</div>'+
-        '<div style="font-size:9px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:3px">'+ic('clock','currentColor',9)+'<span>'+asOf+'</span></div>'+
+        '<div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:monospace">'+escHtml(sym)+'</div>'+
+        '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">'+escHtml(a.name||'')+'</div>'+
       '</div>'+
       '<div style="text-align:right;flex-shrink:0">'+
-        '<div class="'+(refreshing?'shimmer':'')+'" style="font-size:14px;font-weight:700;color:'+ac+';font-family:monospace">'+fmt(val)+'</div>'+
-        '<div style="display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:700;color:'+chgColor+';background:'+chgBg+';border-radius:5px;padding:1px 5px;margin-top:2px">'+chgIcon+'<span>'+chgTxt+'</span></div>'+
+        '<div class="'+(refreshing?'shimmer':'')+'" style="font-size:14px;font-weight:700;color:var(--text);font-family:monospace">'+fmt(val)+'</div>'+
+        '<div style="font-size:11px;font-weight:700;color:'+chgColor+';font-family:monospace;margin-top:1px">'+chgTxt+'</div>'+
       '</div>'+
-      '<button onclick="event.stopPropagation();refreshOneShare('+a.id+')" '+(refreshing?'disabled':'')+' style="background:'+td("accent")+';border:none;color:'+ac+';border-radius:7px;padding:5px 10px;cursor:'+(refreshing?'default':'pointer')+';font-family:inherit;flex-shrink:0;margin-left:6px;opacity:'+(refreshing?'.5':'1')+'" title="Update price">'+ic('refresh',ac,14)+'</button>'+
+    '</div>'+
+    '<div style="display:flex;align-items:center;gap:6px;padding:0 12px 10px 76px">'+
+      '<span style="font-size:9px;font-weight:700;color:'+ac+';background:'+td("accent")+';border-radius:4px;padding:1px 5px;font-family:monospace">'+_shareMarketShort(a.shareMarket)+'</span>'+
+      '<span class="'+(refreshing?'shimmer':'')+'" style="font-size:10px;color:var(--muted)">'+(qty%1===0?qty:qty.toFixed(2))+' @ '+fmt(price)+(cur?' '+cur:'')+'</span>'+
+      '<span style="font-size:9px;color:var(--muted);display:flex;align-items:center;gap:3px">'+ic('clock','currentColor',9)+'<span>'+asOf+'</span></span>'+
+      '<span style="flex:1"></span>'+
+      '<button onclick="event.stopPropagation();refreshOneShare('+a.id+')" '+(refreshing?'disabled':'')+' style="background:'+td("accent")+';border:none;color:'+ac+';border-radius:6px;padding:3px 7px;cursor:'+(refreshing?'default':'pointer')+';font-family:inherit;flex-shrink:0;opacity:'+(refreshing?'.5':'1')+';display:flex;align-items:center;justify-content:center" title="Update price">'+ic('refresh',ac,12)+'</button>'+
     '</div>'+
   '</div>';
 }
@@ -8879,12 +9310,65 @@ function _buildPortfolioListHTML(){
   }
   return list.map(_portfolioRowHTML).join('');
 }
+/* ── Portfolio sub-tabs (v57.1): Stocks / Mortgages / Assets / Debts ────────
+   Stocks keeps every byte of the original Portfolio tab behavior above
+   (_portfolioHoldings/_portfolioFilteredSorted/_portfolioRowHTML/
+   _buildPortfolioListHTML are untouched). The other 3 tabs are just a
+   filtered view of computeNwSections(state.assets) — the SAME bucketing the
+   Net Worth modal uses — rendered with the SAME renderAssetRow/renderDebtRow
+   row markup and edit/delete flows Net Worth already has, so there is no
+   second implementation of "what is a mortgage" or "what a debt row looks
+   like" to fall out of sync. */
+var PORTFOLIO_CAT_LABEL={shares:'Stocks',secured:'Mortgages',assets:'Assets',debts:'Debts'};
+var PORTFOLIO_CAT_ICON={shares:'chart_line',secured:'mortgage',assets:'home',debts:'credit_card'};
+/* 'secured' == Net Worth's "Property & Loans" bucket (isMortgage OR isLoan
+   items). Labelled "Mortgages" in the Portfolio tab per the simpler tab name
+   requested — it still covers general loans (car, personal, etc.), not just
+   literal mortgages; the Add button on that tab offers both. */
+var PORTFOLIO_CAT_EMPTY={
+  shares:{icon:'portfolio',title:'No holdings yet',sub:'Add a stock or ETF holding to start tracking your portfolio here.'},
+  secured:{icon:'mortgage',title:'No mortgages or loans yet',sub:'Add a mortgage or loan to start tracking its balance and equity here.'},
+  assets:{icon:'home',title:'No assets yet',sub:'Add a home, car or other asset to start tracking its value here.'},
+  debts:{icon:'credit_card',title:'No debts yet',sub:'Add a credit card, personal loan or other debt to start tracking it here.'}
+};
+function _portfolioCatItems(cat){
+  var sec=computeNwSections(state.assets||[]).filter(function(s){return s.key===cat;})[0];
+  return sec?sec.items:[];
+}
+function _portfolioCatFilteredSorted(cat){
+  if(cat==='shares')return _portfolioFilteredSorted();
+  var q=(state._portfolioSearch||'').trim().toLowerCase();
+  var items=_portfolioCatItems(cat);
+  if(q)items=items.filter(function(a){return (a.name||'').toLowerCase().indexOf(q)>=0;});
+  function equityOf(a){return (parseFloat(a.value)||0)-(parseFloat(a.debtOwing)||0);}
+  return items.slice().sort(function(x,y){
+    if(cat==='debts')return (parseFloat(y.debtOwing)||0)-(parseFloat(x.debtOwing)||0);
+    return equityOf(y)-equityOf(x);
+  });
+}
+function _buildPortfolioCatListHTML(cat){
+  if(cat==='shares')return _buildPortfolioListHTML();
+  var list=_portfolioCatFilteredSorted(cat);
+  var q=(state._portfolioSearch||'').trim();
+  var meta=PORTFOLIO_CAT_EMPTY[cat]||PORTFOLIO_CAT_EMPTY.assets;
+  if(!list.length){
+    if(q)return '<div style="text-align:center;padding:24px 10px;color:var(--muted);font-size:12px">No '+PORTFOLIO_CAT_LABEL[cat].toLowerCase()+' match "'+escHtml(q)+'"</div>';
+    return emptyState(meta.icon,meta.title,meta.sub);
+  }
+  /* Same dispatch the Net Worth modal's own grouped list uses — reused, not
+     re-implemented: a debt goes to renderDebtRow, everything else (incl.
+     mortgages/loans, which renderAssetRow internally hands off to
+     renderSecuredRow) goes to renderAssetRow. 'portfolio' is threaded through
+     so Save/Delete/Close on a tapped row lands back on this tab. */
+  return list.map(function(a){return a.isDebt?renderDebtRow(a,'portfolio'):renderAssetRow(a,'portfolio');}).join('');
+}
 /* Keyboard-safe search: store without a full render on each keystroke, then
-   patch just the list — same debounced idiom as the History tab's search. */
+   patch just the list — same debounced idiom as the History tab's search.
+   Patches whichever sub-tab is currently active. */
 function _patchPortfolioList(){
   var list=document.getElementById('portfolio-list');
   if(!list){render();return;}
-  list.innerHTML=_buildPortfolioListHTML();
+  list.innerHTML=_buildPortfolioCatListHTML(state._portfolioCat||'shares');
 }
 var _pfSearchTimer=null;
 window.setPortfolioSearchSilent=function(v){
@@ -8898,103 +9382,237 @@ window.clearPortfolioSearch=function(){
   if(inp)inp.value='';
   _patchPortfolioList();
 };
+/* setPortfolioCat: switch the active sub-tab. Session-only (state._portfolioCat)
+   — same as state._nwTab/_nwCollapse, deliberately never passed to save() so
+   it isn't written to storage or export (see persist()/exportProfileData()). */
+window.setPortfolioCat=function(cat){
+  state._portfolioCat=cat;
+  state._portfolioMtgChoice=false;
+  render();
+};
+/* openAddAssetFromPortfolio: same pattern as openAddShareFromPortfolio — jumps
+   into the Net Worth modal's existing plain-Asset add form (addAsset() save
+   path). */
+window.openAddAssetFromPortfolio=function(){
+  state._nwAddMenu=false;
+  state._nwSortMenu=false;
+  state._assetDeleteConfirm=null;
+  state._openDropdown=null;
+  state._assetDraft={name:"",value:"",icon:"home",isDebt:false,isShare:false,shareSymbol:"",shareMarket:".AX",shareQty:"",debtOwing:"",debtPayment:"",debtFreqUnit:"months",debtFreqInterval:1,debtStartDate:todayStr,growthAmount:"",growthFreqUnit:"months",growthFreqInterval:1,growthStartDate:todayStr};
+  state._nwTab='add';
+  state._nwReturnTo='netWorth';
+  setState({modal:'netWorth'});
+};
+/* togglePortfolioMtgChoice: the Mortgages tab's Add button covers both
+   mortgages and general loans (the merged "Property & Loans" bucket), so it
+   needs a 2-way choice — same Mortgage/Loan split Net Worth's own FAB menu
+   offers, just scoped to this one tab. */
+window.togglePortfolioMtgChoice=function(){
+  state._portfolioMtgChoice=!state._portfolioMtgChoice;
+  render();
+};
+function _portfolioMtgChoiceHTML(){
+  if(!state._portfolioMtgChoice)return '';
+  var ac=accent();
+  return '<div onclick="togglePortfolioMtgChoice()" style="position:fixed;inset:0;z-index:262;background:rgba(0,0,0,.45)">'+
+    '<div onclick="event.stopPropagation()" style="position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);display:flex;flex-direction:column;gap:9px">'+
+      [['mortgage','Mortgage','mortgage'],['loan','Loan','loan']].map(function(o){
+        return '<button onclick="togglePortfolioMtgChoice();openLiabilityWizard(\''+o[0]+'\',null,\'portfolio\')" style="'+S({display:'flex',alignItems:'center',gap:'10px',background:'var(--card-grad)',border:'1px solid var(--border)',borderRadius:'13px',padding:'12px 16px',color:'var(--text)',fontWeight:600,fontSize:'14px',cursor:'pointer',fontFamily:'inherit',boxShadow:'0 3px 12px rgba(0,0,0,.35)'})+'">'+ic(o[2],ac,18)+'<span style="flex:1;text-align:left">'+o[1]+'</span></button>';
+      }).join('')+
+    '</div>'+
+  '</div>';
+}
+/* _portfolioCatBar: the 4 sub-tab buttons, count badges styled to mirror the
+   Net Worth group header's own count badge (font-size:9px/700, var(--surface)
+   background, var(--border) border). Segmented-control look matches the
+   Money tab's existing sub-tab bar (renderMoneyTab) for visual consistency.
+   Text/icon color per tab comes from nwSecColor() — the SAME hue the Net
+   Worth composition bar/group-header dot use for that bucket — so a "Stocks"
+   tab here and the "Shares" group in Net Worth always read as the same
+   color. sections is the full unfiltered computeNwSections() result (all 4
+   tabs always shown, even at 0 items, so the user can switch to an empty
+   category and add its first item there). */
+function _portfolioCatBar(sections,cat){
+  return '<div style="display:flex;gap:5px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:10px">'+
+    sections.map(function(sec){
+      var on=cat===sec.key;
+      var col=nwSecColor(sec.key);
+      var fg=on?col:'var(--muted)';
+      return '<button onclick="setPortfolioCat(\''+sec.key+'\')" style="'+S({flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'3px',background:on?'var(--card-grad)':'transparent',border:'1px solid '+(on?'var(--border)':'transparent'),borderRadius:'9px',padding:'7px 2px',color:fg,fontWeight:on?700:600,fontSize:'10px',cursor:'pointer',fontFamily:'inherit'})+'">'+
+        ic(PORTFOLIO_CAT_ICON[sec.key],fg,15)+
+        '<span>'+PORTFOLIO_CAT_LABEL[sec.key]+'</span>'+
+        '<span style="font-size:9px;font-weight:700;color:'+fg+';background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:1px 6px">'+sec.items.length+'</span>'+
+      '</button>';
+    }).join('')+
+  '</div>';
+}
 function renderPortfolioTab(){
   var ac=accent(),at=accentText(),rdFg=typeRedFg();
-  var holdings=_portfolioHoldings();
+  /* All 4 buckets, unfiltered — the tab bar always shows Stocks/Mortgages/
+     Assets/Debts even when a bucket is empty (computeNwSections is the same
+     single source of truth the Net Worth modal uses; it filters empty
+     sections OUT for its own collapsible list, this tab bar does not). */
+  var allSections=computeNwSections(state.assets||[]);
+  var cat=state._portfolioCat||'shares';
+  if(!allSections.some(function(s){return s.key===cat;}))cat='shares';
+  var activeSec=allSections.filter(function(s){return s.key===cat;})[0];
+  var catBar=_portfolioCatBar(allSections,cat);
+  var body;
 
-  function addBtnHTML(){
-    return '<button onclick="openAddShareFromPortfolio()" style="'+S({width:"100%",background:ac,border:"none",borderRadius:"12px",padding:"12px",color:at,fontWeight:700,fontSize:"13px",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:"7px"})+'">'+ic('plus',at,16)+' Add Holding</button>';
+  if(cat==='shares'){
+    var holdings=_portfolioHoldings();
+
+    function addBtnHTML(){
+      return '<button onclick="openAddShareFromPortfolio()" style="'+S({width:"100%",background:ac,border:"none",borderRadius:"12px",padding:"12px",color:at,fontWeight:700,fontSize:"13px",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:"7px"})+'">'+ic('plus',at,16)+' Add Holding</button>';
+    }
+
+    if(!holdings.length){
+      body=emptyState('portfolio','No holdings yet','Add a stock or ETF holding to start tracking your portfolio here.')+addBtnHTML();
+    } else {
+
+    var refreshing=!!state._sharesRefreshing;
+
+    /* Hero total — a real sum of shareValue(a) over every holding, mirroring
+       exactly how totalNetWorth()/the Net Worth "Shares" section total their
+       value (same a.value convention, same lack of cross-currency conversion —
+       this app doesn't convert between currencies anywhere, so a USD holding's
+       number is summed alongside AUD ones just as it already is in Net Worth). */
+    var totalValue=holdings.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:shareValue(a));},0);
+
+    /* Today's change — value-weighted average of each holding's REAL
+       regularMarketChangePercent (only holdings that have actually been
+       refreshed contribute). Dollar change is the real per-holding
+       shareChangeAmt × quantity, summed. Never fabricated: if nothing has
+       been refreshed yet, haveChangeData is false and the UI says so. */
+    var withChange=holdings.filter(function(a){return !a.excludeFromNetWorth&&a.shareChangePct!=null&&isFinite(a.shareChangePct);});
+    var haveChangeData=withChange.length>0;
+    var totalChangeValue=0,weightedPctSum=0,weightW=0;
+    withChange.forEach(function(a){
+      var v=shareValue(a);
+      totalChangeValue+=(parseFloat(a.shareChangeAmt)||0)*(parseFloat(a.shareQty)||0);
+      weightedPctSum+=v*(parseFloat(a.shareChangePct)||0);
+      weightW+=v;
+    });
+    var aggPct=weightW>0?weightedPctSum/weightW:0;
+    var chgUp=totalChangeValue>=0;
+    var chgColor=haveChangeData?(chgUp?ac:rdFg):'var(--muted)';
+
+    var lastUpdated=null;
+    holdings.forEach(function(a){
+      if(a.sharePriceAt){var t=new Date(a.sharePriceAt).getTime();if(!isNaN(t)&&(!lastUpdated||t>lastUpdated))lastUpdated=a.sharePriceAt;}
+    });
+    var luDisplay='—',luSub='Never refreshed';
+    if(lastUpdated){
+      var _s=fmtAsOf(lastUpdated);
+      var _p=_s.split(' ');
+      if(_p[0]==='today'){luSub='Today';luDisplay=_p.slice(1).join(' ');}
+      else{luSub=_p[0]+' '+_p[1];luDisplay=_p.slice(2).join(' ');}
+    }
+
+    var heroTrend=haveChangeData?
+      '<div style="display:inline-flex;align-items:center;gap:5px;background:'+(chgUp?td('accent'):td('red'))+';border-radius:8px;padding:4px 9px;margin-top:8px">'+
+        ic(chgUp?'trending_up':'trending_down',chgColor,13)+
+        '<span style="font-size:12px;font-weight:700;color:'+chgColor+';font-family:monospace">'+(chgUp?'+':'')+fmt(totalChangeValue)+' ('+(chgUp?'+':'')+aggPct.toFixed(2)+'%) today</span>'+
+      '</div>':
+      '<div style="font-size:11px;color:var(--muted);margin-top:8px">Tap refresh to load today’s change</div>';
+
+    var refreshBtn='<button onclick="event.stopPropagation();window.refreshSharePrices({manual:true})" '+(refreshing?'disabled':'')+' aria-label="Refresh share prices" title="Refresh share prices" style="'+S({background:td('accent'),border:'1px solid '+ac+'33',borderRadius:'9px',width:'34px',height:'34px',display:'flex',alignItems:'center',justifyContent:'center',cursor:refreshing?'default':'pointer',flexShrink:0,opacity:refreshing?'.5':'1'})+'">'+ic('refresh',ac,16)+'</button>';
+
+    /* Hero card: reuses heroRingWrap() — the exact wrapper the Net Worth and
+       Overview hero cards use — and the same 28px/800/monospace "big number"
+       treatment as the Net Worth total, so the Portfolio tab's headline figure
+       looks consistent with the rest of the app rather than introducing a new
+       serif webfont (none is bundled — this app must work offline). */
+    var hero=heroRingWrap(
+      '<div style="padding:16px 20px">'+
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">'+
+          '<span style="flex:1;font-size:10px;color:'+ac+';font-weight:600;text-transform:uppercase;letter-spacing:.06em;opacity:.8">Total Portfolio Value</span>'+
+          refreshBtn+
+        '</div>'+
+        '<div class="'+(refreshing?'shimmer':'')+'" style="font-size:28px;font-weight:800;color:'+ac+';font-family:monospace;line-height:1.1">'+fmt(totalValue)+'</div>'+
+        heroTrend+
+      '</div>'
+    );
+
+    /* Three honest stat cards — Holdings count, real Today's Change, and the
+       real Last Updated timestamp — in place of the reference mock's fabricated
+       "Monthly ROI" / "Risk Level" cards (this app has no cost-basis history to
+       compute ROI, and no risk model). */
+    var statsRow='<div style="display:flex;gap:8px;margin-bottom:12px">'+
+      statCard(ic('portfolio',ac,15),'Holdings',String(holdings.length),holdings.length===1?'position':'positions',ac,td('accent'))+
+      statCard(ic(haveChangeData?(chgUp?'trending_up':'trending_down'):'clock',chgColor,15),"Today's Change",haveChangeData?((chgUp?'+':'')+aggPct.toFixed(2)+'%'):'—',haveChangeData?((chgUp?'+':'')+fmt(totalChangeValue)):'No data yet',chgColor,haveChangeData?(chgUp?td('accent'):td('red')):'var(--surface)')+
+      statCard(ic('clock','var(--muted)',15),'Last Updated',luDisplay,luSub,'var(--muted)','var(--surface)')+
+    '</div>';
+
+    var q=state._portfolioSearch||'';
+    var searchBar='<div style="position:relative;margin-bottom:10px">'+
+      '<span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex">'+ic('search','var(--muted)',15)+'</span>'+
+      '<input id="portfolio-search-input" type="text" placeholder="Search ticker or name" value="'+escHtml(q)+'" oninput="setPortfolioSearchSilent(this.value)" style="'+S({width:'100%',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:'11px',padding:'10px 34px 10px 34px',color:'var(--text)',fontSize:'13px',fontFamily:'inherit'})+'"/>'+
+      (q?'<button onclick="clearPortfolioSearch()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;padding:4px;display:flex" aria-label="Clear search">'+ic('x','var(--muted)',14)+'</button>':'')+
+    '</div>';
+
+    var listHTML='<div id="portfolio-list">'+_buildPortfolioListHTML()+'</div>';
+
+    body=hero+statsRow+searchBar+'<div style="margin-bottom:12px">'+addBtnHTML()+'</div>'+listHTML;
+    }
+  } else {
+    /* ── Mortgages / Assets / Debts: hero + stats come straight from the
+       same sec.sub()/sec.neg convention the Net Worth modal's group headers
+       already use — reused via computeNwSections, not recomputed. ── */
+    var subVal=activeSec.sub(activeSec.items);
+    var subColor=activeSec.neg?rdFg:(subVal>=0?ac:rdFg);
+    var subFigure=(activeSec.neg&&subVal<0?'−'+fmt(-subVal):fmt(subVal));
+    var heroLabel=cat==='secured'?'Mortgages & Loans Equity':(cat==='assets'?'Total Assets Value':'Total Debt');
+
+    var hero2=heroRingWrap(
+      '<div style="padding:16px 20px">'+
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">'+
+          '<span style="flex:1;font-size:10px;color:'+subColor+';font-weight:600;text-transform:uppercase;letter-spacing:.06em;opacity:.8">'+heroLabel+'</span>'+
+        '</div>'+
+        '<div style="font-size:28px;font-weight:800;color:'+subColor+';font-family:monospace;line-height:1.1">'+subFigure+'</div>'+
+      '</div>'
+    );
+
+    /* Simplified 2-card stat row — item count + subtotal only. Today's
+       Change / Last Updated are share-only concepts (real market quotes),
+       so they're omitted here rather than faked for non-share items. */
+    var tdKey=cat==='secured'?'blue':(cat==='debts'?'red':'accent');
+    var statsRow2='<div style="display:flex;gap:8px;margin-bottom:12px">'+
+      statCard(ic(PORTFOLIO_CAT_ICON[cat],subColor,15),'Items',String(activeSec.items.length),activeSec.items.length===1?'item':'items',subColor,td(tdKey))+
+      statCard(ic('money_bag',subColor,15),cat==='debts'?'Total Owing':'Equity',subFigure,'',subColor,td(tdKey))+
+    '</div>';
+
+    var q2=state._portfolioSearch||'';
+    var searchBar2='<div style="position:relative;margin-bottom:10px">'+
+      '<span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex">'+ic('search','var(--muted)',15)+'</span>'+
+      '<input id="portfolio-search-input" type="text" placeholder="Search by name" value="'+escHtml(q2)+'" oninput="setPortfolioSearchSilent(this.value)" style="'+S({width:'100%',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:'11px',padding:'10px 34px 10px 34px',color:'var(--text)',fontSize:'13px',fontFamily:'inherit'})+'"/>'+
+      (q2?'<button onclick="clearPortfolioSearch()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;padding:4px;display:flex" aria-label="Clear search">'+ic('x','var(--muted)',14)+'</button>':'')+
+    '</div>';
+
+    /* Add button: Assets/Debts go straight into the same forms Net Worth
+       uses for that type (openAddAssetFromPortfolio mirrors
+       openAddShareFromPortfolio's pattern; the Debts tab calls
+       openLiabilityWizard('debt',...) directly — no separate form is built
+       here). Mortgages is a merged bucket (isMortgage OR isLoan) so its Add
+       button opens a small Mortgage/Loan choice first, same as Net Worth's
+       own FAB menu offers both as separate options. */
+    var addBtn2;
+    if(cat==='secured'){
+      addBtn2='<button onclick="togglePortfolioMtgChoice()" style="'+S({width:"100%",background:ac,border:"none",borderRadius:"12px",padding:"12px",color:at,fontWeight:700,fontSize:"13px",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:"7px"})+'">'+ic('plus',at,16)+' Add Mortgage or Loan</button>';
+    } else if(cat==='assets'){
+      addBtn2='<button onclick="openAddAssetFromPortfolio()" style="'+S({width:"100%",background:ac,border:"none",borderRadius:"12px",padding:"12px",color:at,fontWeight:700,fontSize:"13px",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:"7px"})+'">'+ic('plus',at,16)+' Add Asset</button>';
+    } else {
+      addBtn2='<button onclick="openLiabilityWizard(\'debt\',null,\'portfolio\')" style="'+S({width:"100%",background:ac,border:"none",borderRadius:"12px",padding:"12px",color:at,fontWeight:700,fontSize:"13px",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:"7px"})+'">'+ic('plus',at,16)+' Add Debt</button>';
+    }
+
+    var listHTML2='<div id="portfolio-list">'+_buildPortfolioCatListHTML(cat)+'</div>';
+
+    body=hero2+statsRow2+searchBar2+'<div style="margin-bottom:12px">'+addBtn2+'</div>'+listHTML2;
   }
 
-  if(!holdings.length){
-    return emptyState('portfolio','No holdings yet','Add a stock or ETF holding to start tracking your portfolio here.')+addBtnHTML();
-  }
-
-  var refreshing=!!state._sharesRefreshing;
-
-  /* Hero total — a real sum of shareValue(a) over every holding, mirroring
-     exactly how totalNetWorth()/the Net Worth "Shares" section total their
-     value (same a.value convention, same lack of cross-currency conversion —
-     this app doesn't convert between currencies anywhere, so a USD holding's
-     number is summed alongside AUD ones just as it already is in Net Worth). */
-  var totalValue=holdings.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:shareValue(a));},0);
-
-  /* Today's change — value-weighted average of each holding's REAL
-     regularMarketChangePercent (only holdings that have actually been
-     refreshed contribute). Dollar change is the real per-holding
-     shareChangeAmt × quantity, summed. Never fabricated: if nothing has
-     been refreshed yet, haveChangeData is false and the UI says so. */
-  var withChange=holdings.filter(function(a){return !a.excludeFromNetWorth&&a.shareChangePct!=null&&isFinite(a.shareChangePct);});
-  var haveChangeData=withChange.length>0;
-  var totalChangeValue=0,weightedPctSum=0,weightW=0;
-  withChange.forEach(function(a){
-    var v=shareValue(a);
-    totalChangeValue+=(parseFloat(a.shareChangeAmt)||0)*(parseFloat(a.shareQty)||0);
-    weightedPctSum+=v*(parseFloat(a.shareChangePct)||0);
-    weightW+=v;
-  });
-  var aggPct=weightW>0?weightedPctSum/weightW:0;
-  var chgUp=totalChangeValue>=0;
-  var chgColor=haveChangeData?(chgUp?ac:rdFg):'var(--muted)';
-
-  var lastUpdated=null;
-  holdings.forEach(function(a){
-    if(a.sharePriceAt){var t=new Date(a.sharePriceAt).getTime();if(!isNaN(t)&&(!lastUpdated||t>lastUpdated))lastUpdated=a.sharePriceAt;}
-  });
-  var luDisplay='—',luSub='Never refreshed';
-  if(lastUpdated){
-    var _s=fmtAsOf(lastUpdated);
-    var _p=_s.split(' ');
-    if(_p[0]==='today'){luSub='Today';luDisplay=_p.slice(1).join(' ');}
-    else{luSub=_p[0]+' '+_p[1];luDisplay=_p.slice(2).join(' ');}
-  }
-
-  var heroTrend=haveChangeData?
-    '<div style="display:inline-flex;align-items:center;gap:5px;background:'+(chgUp?td('accent'):td('red'))+';border-radius:8px;padding:4px 9px;margin-top:8px">'+
-      ic(chgUp?'trending_up':'trending_down',chgColor,13)+
-      '<span style="font-size:12px;font-weight:700;color:'+chgColor+';font-family:monospace">'+(chgUp?'+':'')+fmt(totalChangeValue)+' ('+(chgUp?'+':'')+aggPct.toFixed(2)+'%) today</span>'+
-    '</div>':
-    '<div style="font-size:11px;color:var(--muted);margin-top:8px">Tap refresh to load today’s change</div>';
-
-  var refreshBtn='<button onclick="event.stopPropagation();window.refreshSharePrices({manual:true})" '+(refreshing?'disabled':'')+' aria-label="Refresh share prices" title="Refresh share prices" style="'+S({background:td('accent'),border:'1px solid '+ac+'33',borderRadius:'9px',width:'34px',height:'34px',display:'flex',alignItems:'center',justifyContent:'center',cursor:refreshing?'default':'pointer',flexShrink:0,opacity:refreshing?'.5':'1'})+'">'+ic('refresh',ac,16)+'</button>';
-
-  /* Hero card: reuses heroRingWrap() — the exact wrapper the Net Worth and
-     Overview hero cards use — and the same 28px/800/monospace "big number"
-     treatment as the Net Worth total, so the Portfolio tab's headline figure
-     looks consistent with the rest of the app rather than introducing a new
-     serif webfont (none is bundled — this app must work offline). */
-  var hero=heroRingWrap(
-    '<div style="padding:16px 20px">'+
-      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">'+
-        '<span style="flex:1;font-size:10px;color:'+ac+';font-weight:600;text-transform:uppercase;letter-spacing:.06em;opacity:.8">Total Portfolio Value</span>'+
-        refreshBtn+
-      '</div>'+
-      '<div class="'+(refreshing?'shimmer':'')+'" style="font-size:28px;font-weight:800;color:'+ac+';font-family:monospace;line-height:1.1">'+fmt(totalValue)+'</div>'+
-      heroTrend+
-    '</div>'
-  );
-
-  /* Three honest stat cards — Holdings count, real Today's Change, and the
-     real Last Updated timestamp — in place of the reference mock's fabricated
-     "Monthly ROI" / "Risk Level" cards (this app has no cost-basis history to
-     compute ROI, and no risk model). */
-  var statsRow='<div style="display:flex;gap:8px;margin-bottom:12px">'+
-    statCard(ic('portfolio',ac,15),'Holdings',String(holdings.length),holdings.length===1?'position':'positions',ac,td('accent'))+
-    statCard(ic(haveChangeData?(chgUp?'trending_up':'trending_down'):'clock',chgColor,15),"Today's Change",haveChangeData?((chgUp?'+':'')+aggPct.toFixed(2)+'%'):'—',haveChangeData?((chgUp?'+':'')+fmt(totalChangeValue)):'No data yet',chgColor,haveChangeData?(chgUp?td('accent'):td('red')):'var(--surface)')+
-    statCard(ic('clock','var(--muted)',15),'Last Updated',luDisplay,luSub,'var(--muted)','var(--surface)')+
-  '</div>';
-
-  var q=state._portfolioSearch||'';
-  var searchBar='<div style="position:relative;margin-bottom:10px">'+
-    '<span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex">'+ic('search','var(--muted)',15)+'</span>'+
-    '<input id="portfolio-search-input" type="text" placeholder="Search ticker or name" value="'+escHtml(q)+'" oninput="setPortfolioSearchSilent(this.value)" style="'+S({width:'100%',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:'11px',padding:'10px 34px 10px 34px',color:'var(--text)',fontSize:'13px',fontFamily:'inherit'})+'"/>'+
-    (q?'<button onclick="clearPortfolioSearch()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;padding:4px;display:flex" aria-label="Clear search">'+ic('x','var(--muted)',14)+'</button>':'')+
-  '</div>';
-
-  var listHTML='<div id="portfolio-list">'+_buildPortfolioListHTML()+'</div>';
-
-  return hero+statsRow+searchBar+'<div style="margin-bottom:12px">'+addBtnHTML()+'</div>'+listHTML;
+  return catBar+body+_assetDeleteConfirmHTML()+_portfolioMtgChoiceHTML();
 }
+
 
 
 /* ─── Before-pay total ──────────────────────────────────────────────────────
@@ -9464,6 +10082,90 @@ function renderBudgetsTab(){
     '<div style="font-size:16px;font-weight:700;color:var(--text)">Budgets · '+monthLabel+'</div>'+
     '<div style="display:flex;align-items:center;gap:6px">'+editBtn+'</div>'+
   '</div>';
+  /* v58.1: shared stat cell for the category cards' Spent/Scheduled/Target row */
+  function _budgetStat(label,val,align){
+    return '<div style="text-align:'+align+';flex:1;min-width:0">'+
+      '<div style="font-size:8px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;white-space:nowrap">'+label+'</div>'+
+      '<div style="font-size:12px;font-weight:700;color:var(--text);font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+val+'</div>'+
+    '</div>';
+  }
+  /* v58.1: Efficiency Score card — this month's actual spend vs last month
+     (or, absent that, vs the trailing average), plus the single biggest
+     per-category saving and increase driving the change. */
+  var eff=computeMonthlyEfficiency(yr,mo);
+  var effColor=eff.level==='OVER BUDGET'?rdFg:(eff.level==='WATCH'?orgFg:acFg);
+  var effTrendColor=eff.hasData?(eff.pctChange>0?rdFg:acFg):'var(--muted)';
+  var effTrendTxt=eff.hasData?
+    (Math.abs(eff.pctChange)<1?'Flat vs '+eff.baseLabel:
+      'Spending '+(eff.pctChange>0?'up':'down')+' '+Math.abs(Math.round(eff.pctChange))+'% vs '+eff.baseLabel):
+    'Not enough history yet';
+  var effParts=[];
+  if(eff.saveMove){var svCat=catInfo(eff.saveMove.key)||{};effParts.push('saved '+fmt(Math.abs(eff.saveMove.delta))+' on '+escHtml(svCat.label||'a category'));}
+  if(eff.spendMove){var spCat=catInfo(eff.spendMove.key)||{};effParts.push('spent '+fmt(eff.spendMove.delta)+' more on '+escHtml(spCat.label||'a category'));}
+  var effOverview=effParts.length?
+    ('You '+effParts.join(' and ')+' compared to '+eff.baseLabel+'.'):
+    (eff.hasData?'Spending held steady across categories compared to '+eff.baseLabel+'.':'Track a couple more months to see a comparison here.');
+  var effCard=!isEditMode?('<div style="background:var(--card-grad);border-radius:14px;padding:13px 14px;border:1px solid var(--border);margin-bottom:12px;display:flex;gap:12px;align-items:center">'+
+      '<div style="width:42px;height:42px;border-radius:12px;background:'+td(eff.level==='OVER BUDGET'?'red':(eff.level==='WATCH'?'orange':'accent'))+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+
+        icS('sparkles',effColor,17)+
+      '</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">Efficiency Score</div>'+
+        '<div style="font-size:11px;color:'+effTrendColor+';font-weight:600;margin-bottom:3px">'+effTrendTxt+'</div>'+
+        '<div style="font-size:10px;color:var(--muted);line-height:1.35">'+effOverview+'</div>'+
+      '</div>'+
+      '<div style="text-align:right;flex-shrink:0;padding-left:6px">'+
+        '<div style="font-size:20px;font-weight:800;color:'+effColor+';font-family:monospace;line-height:1">'+eff.score+'</div>'+
+        '<div style="font-size:9px;font-weight:700;color:'+effColor+';letter-spacing:.05em;text-transform:uppercase;margin-top:2px;white-space:nowrap">'+eff.level+'</div>'+
+      '</div>'+
+    '</div>'):'';
+  /* v58.3: Remaining Budget hero card — sums every category (incl. Uncategorised)
+     that has a target set, and shows what's left against those targets plus a
+     daily-limit figure derived from the current burn rate and days left in the
+     viewed month. Mirrors the per-category hasBudget/pctRaw logic below so the
+     top-level number always agrees with the category cards underneath it. */
+  var _budTargetTotal=0,_budSpentTotal=0;
+  allCatsSorted().concat([{key:UNCATEGORISED_KEY}]).forEach(function(c){
+    var b=(state.catBudgets&&state.catBudgets[c.key])||0;
+    if(b>0){_budTargetTotal+=b;_budSpentTotal+=(spendByCat[c.key]||0);}
+  });
+  var _budRemaining=_budTargetTotal-_budSpentTotal;
+  var _budPctUsed=_budTargetTotal>0?Math.round((_budSpentTotal/_budTargetTotal)*100):0;
+  var _daysInMonth=new Date(yr,mo+1,0).getDate();
+  var _isCurMonth=(yr===today.getFullYear()&&mo===today.getMonth());
+  var _daysLeft=_isCurMonth?Math.max(1,_daysInMonth-today.getDate()+1):_daysInMonth;
+  var _dailyLimit=_budRemaining>0?(_budRemaining/_daysLeft):0;
+  var _monthElapsedPct=Math.min(100,Math.max(0,Math.round(((_daysInMonth-_daysLeft)/_daysInMonth)*100)));
+  var _remColor=_budRemaining<0?rdFg:(_budPctUsed>=80?orgFg:acFg);
+  var _dailyLimitRow=_budRemaining>0?
+    ('<span style="font-size:11px;color:var(--muted)">'+(_isCurMonth?'Daily limit advice':'Avg. daily limit')+'</span>'+
+     '<span style="font-size:13px;font-weight:700;color:var(--text);font-family:monospace">'+fmt(_dailyLimit)+'/day</span>'):
+    ('<span style="font-size:11px;color:var(--muted)">Status</span>'+
+     '<span style="font-size:13px;font-weight:700;color:'+rdFg+'">Over budget by '+fmt(Math.abs(_budRemaining))+'</span>');
+  var remainingCard=(!isEditMode&&_budTargetTotal>0)?(
+    '<div style="background:var(--card-grad);border-radius:14px;padding:14px 16px;border:1px solid var(--border);margin-bottom:12px">'+
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'+
+        '<div style="width:42px;height:42px;border-radius:12px;background:'+td(_budRemaining<0?'red':(_budPctUsed>=80?'orange':'accent'))+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+
+          icS('wallet',_remColor,19)+
+        '</div>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">Remaining Budget</div>'+
+          '<div style="font-size:20px;font-weight:800;color:'+(_budRemaining<0?rdFg:'var(--text)')+';font-family:monospace;line-height:1">'+fmt(_budRemaining)+'</div>'+
+        '</div>'+
+        '<div style="text-align:right;flex-shrink:0">'+
+          '<div style="font-size:16px;font-weight:800;color:'+_remColor+';font-family:monospace">'+_budPctUsed+'%</div>'+
+          '<div style="font-size:8px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Used</div>'+
+        '</div>'+
+      '</div>'+
+      '<div style="border-top:1px solid var(--border);padding-top:10px">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+_dailyLimitRow+'</div>'+
+        '<div style="background:var(--surface);border-radius:5px;height:5px;overflow:hidden">'+
+          '<div style="height:100%;border-radius:5px;width:'+_monthElapsedPct+'%;background:'+acFg+'"></div>'+
+        '</div>'+
+        '<div style="font-size:9px;color:var(--muted);margin-top:6px">'+(_isCurMonth?(_daysLeft+' day'+(_daysLeft===1?'':'s')+' left this month · based on current target vs. spend'):(_daysInMonth+'-day month view'))+'</div>'+
+      '</div>'+
+    '</div>'
+  ):'';
   var inlineKey=state._budgetInlineEdit||null;
   var rowObjs=cats.map(function(c){
     var budget=state.catBudgets?state.catBudgets[c.key]:0;
@@ -9474,52 +10176,32 @@ function renderBudgetsTab(){
     /* Skip categories with no data at all (no budget, no spent, no projected) — unless in edit/inline mode */
     if(!isEditMode&&!isInline&&!hasBudget&&spent===0&&projected===0)return null;
     var showInput=isEditMode||isInline;
-    var pct=hasBudget?Math.min(100,Math.round((spent/budget)*100)):0;
-    var projPct=hasBudget?Math.min(100,Math.round((projected/budget)*100)):0;
-    /* For no-budget view: use projected as 100% baseline for bar */
-    var noBudgetPct=(spent>0&&projected>0)?Math.min(100,Math.round((spent/projected)*100)):(spent>0?100:0);
-    var barColor=pct>=100?rdFg:(pct>=80?orgFg:acFg);
-    var projBarColor=projPct>=100?rdFg:(projPct>=80?orgFg:acFg);
-    var noBudgetBarColor=noBudgetPct>=100?rdFg:(noBudgetPct>=80?orgFg:acFg);
+    /* v58.1: pctRaw is uncapped (so an over-budget category can read "105% Used"
+       like the target card design), barPct is the capped 0–100 width for the bar. */
+    var pctRaw=hasBudget?Math.round((spent/budget)*100):0;
+    var barPct=hasBudget?Math.min(100,pctRaw):(projected>0?Math.min(100,Math.round((spent/projected)*100)):(spent>0?100:0));
+    var barColor=hasBudget?(pctRaw>=100?rdFg:(pctRaw>=80?orgFg:acFg)):(barPct>=100?rdFg:acFg);
     /* Fill ratio for ordering bars highest→lowest (uncapped so over-budget sorts above at-budget) */
     var fillRatio=hasBudget?(budget>0?(spent/budget)*100:0)
       :(spent>0&&projected>0?(spent/projected)*100
       :(spent>0?100:0));
-    var _html='<div onclick="'+(showInput?'':'openCatSummary(\''+c.key+'\')')+'" style="background:var(--card-grad);border-radius:10px;padding:6px 11px 7px;border:1px solid '+(isInline?acFg:'var(--border)')+';margin-bottom:5px'+(showInput?'':';cursor:pointer')+'">'+
-      '<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">'+
-        '<div style="width:21px;height:21px;border-radius:6px;background:'+(isMono()?(isMonoLight()?'#EBEBEB':'#1E1E1E'):(c.color+'12'))+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(c.icon,isMono()?(isMonoLight()?'#444444':'#CCCCCC'):(c.color||acFg),13)+'</div>'+
-        '<span style="flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+c.label+'</span>'+
-        (hasBudget?
-          '<div style="text-align:right">'+
-            '<div style="font-size:11px;font-weight:700;color:'+(pct>=100?rdFg:(pct>=80?orgFg:'var(--sub)'))+';font-family:monospace">'+fmt(spent)+' / '+fmt(budget)+'</div>'+
-            (projected>0?'<div style="font-size:9px;color:var(--muted);font-family:monospace">of '+fmt(projected)+' scheduled</div>':'')+
-          '</div>':
-          /* No budget: show spent vs scheduled (projected) */
-          (spent>0||projected>0?
-            '<div style="text-align:right">'+
-              '<div style="font-size:11px;font-weight:700;color:'+(noBudgetPct>=100?rdFg:'var(--sub)')+';font-family:monospace">'+fmt(spent)+' spent</div>'+
-              (projected>0?'<div style="font-size:9px;color:var(--muted);font-family:monospace">of '+fmt(projected)+' scheduled</div>':'')+
-            '</div>':
-            '<span style="font-size:11px;color:var(--muted)">No budget</span>')
-        )+
+    var usedBadge=hasBudget?
+      '<span style="font-size:10px;font-weight:800;color:'+barColor+';white-space:nowrap;flex-shrink:0">'+pctRaw+'% Used</span>':
+      (spent>0||projected>0?'<span style="font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;flex-shrink:0">No Target</span>':'');
+    var _html='<div onclick="'+(showInput?'':'openCatSummary(\''+c.key+'\')')+'" style="background:var(--card-grad);border-radius:14px;padding:13px 14px;border:1px solid '+(isInline?acFg:'var(--border)')+';margin-bottom:9px'+(showInput?'':';cursor:pointer')+'">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">'+
+        '<div style="width:26px;height:26px;border-radius:7px;background:'+(isMono()?(isMonoLight()?'#EBEBEB':'#1E1E1E'):(catColor(c)+'12'))+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(c.icon,isMono()?(isMonoLight()?'#444444':'#CCCCCC'):(catColor(c)||acFg),15)+'</div>'+
+        '<span style="flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+c.label+'</span>'+
+        usedBadge+
       '</div>'+
-      (hasBudget?
-        '<div style="position:relative;background:var(--surface);border-radius:4px;height:5px;overflow:hidden;margin-bottom:'+(showInput?'8':'0')+'px">'+
-          (projPct>pct?'<div style="position:absolute;left:0;top:0;height:100%;border-radius:5px;width:'+projPct+'%;background:'+projBarColor+'44"></div>':'')+
-          '<div style="position:relative;background:'+barColor+';height:100%;border-radius:5px;width:'+pct+'%"></div>'+
-        '</div>':
-        /* No budget bar: spent vs projected */
-        (spent>0&&projected>0?
-          '<div style="position:relative;background:var(--surface);border-radius:4px;height:5px;overflow:hidden;margin-bottom:'+(showInput?'8':'4')+'px">'+
-            '<div style="position:absolute;left:0;top:0;height:100%;border-radius:5px;width:100%;background:'+noBudgetBarColor+'44"></div>'+
-            '<div style="position:relative;background:'+noBudgetBarColor+';height:100%;border-radius:5px;width:'+noBudgetPct+'%"></div>'+
-          '</div>':
-          (spent>0?
-            '<div style="position:relative;background:var(--surface);border-radius:4px;height:5px;overflow:hidden;margin-bottom:'+(showInput?'8':'4')+'px">'+
-              '<div style="position:relative;background:'+noBudgetBarColor+';height:100%;border-radius:5px;width:100%"></div>'+
-            '</div>':'')
-        )
-      )+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:9px">'+
+        _budgetStat('Spent',fmt(spent),'left')+
+        _budgetStat('Scheduled',fmt(projected),'center')+
+        _budgetStat('Target',hasBudget?fmt(budget):'–','right')+
+      '</div>'+
+      '<div style="position:relative;background:var(--surface);border-radius:5px;height:6px;overflow:hidden'+(showInput?';margin-bottom:8px':'')+'">'+
+        '<div style="height:100%;border-radius:5px;width:'+barPct+'%;background:'+barColor+'"></div>'+
+      '</div>'+
       (showInput?
         '<input id="budget-inline-'+c.key+'" type="number" inputmode="decimal" placeholder="Monthly limit (blank = none)" value="'+(budget||'')+'" style="'+iS()+';font-size:13px;padding:8px 10px" oninput="setBudgetSilent(\''+c.key+'\',this.value)" onblur="setBudgetAndSave(\''+c.key+'\',this.value)'+(isInline?';closeBudgetInlineEdit()':'')+'" onkeydown="if(event.key===\'Enter\'){this.blur();}"/>':'')+
     '</div>';
@@ -9530,47 +10212,30 @@ function renderBudgetsTab(){
   var uncatProjected=projByCat[UNCATEGORISED_KEY]||0;
   var uncatBudget=(state.catBudgets&&state.catBudgets[UNCATEGORISED_KEY])||0;
   var uncatHasBudget=uncatBudget>0;
-  var uncatPct=uncatHasBudget?Math.min(100,Math.round((uncatSpent/uncatBudget)*100)):0;
-  var uncatProjPct=uncatHasBudget?Math.min(100,Math.round((uncatProjected/uncatBudget)*100)):0;
-  var uncatNoBudgetPct=(uncatSpent>0&&uncatProjected>0)?Math.min(100,Math.round((uncatSpent/uncatProjected)*100)):(uncatSpent>0?100:0);
-  var uncatBarColor=uncatPct>=100?rdFg:(uncatPct>=80?orgFg:acFg);
-  var uncatProjBarColor=uncatProjPct>=100?rdFg:(uncatProjPct>=80?orgFg:acFg);
-  var uncatNoBudgetBarColor=uncatNoBudgetPct>=100?rdFg:(uncatNoBudgetPct>=80?orgFg:acFg);
+  var uncatPctRaw=uncatHasBudget?Math.round((uncatSpent/uncatBudget)*100):0;
+  var uncatBarPct=uncatHasBudget?Math.min(100,uncatPctRaw):(uncatProjected>0?Math.min(100,Math.round((uncatSpent/uncatProjected)*100)):(uncatSpent>0?100:0));
+  var uncatBarColor=uncatHasBudget?(uncatPctRaw>=100?rdFg:(uncatPctRaw>=80?orgFg:acFg)):(uncatBarPct>=100?rdFg:acFg);
   var isUncatInline=!isEditMode&&inlineKey===UNCATEGORISED_KEY;
   var showUncatInput=isEditMode||isUncatInline;
   var showUncatRow=isEditMode||isUncatInline||(uncatHasBudget||uncatSpent>0||uncatProjected>0);
+  var uncatUsedBadge=uncatHasBudget?
+    '<span style="font-size:10px;font-weight:800;color:'+uncatBarColor+';white-space:nowrap;flex-shrink:0">'+uncatPctRaw+'% Used</span>':
+    (uncatSpent>0||uncatProjected>0?'<span style="font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;flex-shrink:0">No Target</span>':'');
   var uncatRow=showUncatRow?
-    '<div onclick="'+(showUncatInput?'':'openCatSummary(\''+UNCATEGORISED_KEY+'\')')+'" style="background:var(--card-grad);border-radius:12px;padding:11px 13px;border:1px solid '+(isUncatInline?acFg:'var(--border)')+';margin-bottom:8px'+(showUncatInput?'':';cursor:pointer')+'">'+
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+
-        '<span style="font-size:18px;color:var(--muted)">–</span>'+
-        '<span style="flex:1;font-size:13px;font-weight:600;color:var(--muted)">Uncategorised</span>'+
-        (uncatHasBudget?
-          '<div style="text-align:right">'+
-            '<div style="font-size:11px;font-weight:700;color:'+(uncatPct>=100?rdFg:(uncatPct>=80?orgFg:'var(--sub)'))+';font-family:monospace">'+fmt(uncatSpent)+' / '+fmt(uncatBudget)+'</div>'+
-            (uncatProjected>0?'<div style="font-size:9px;color:var(--muted);font-family:monospace">of '+fmt(uncatProjected)+' scheduled</div>':'')+
-          '</div>':
-          '<div style="text-align:right">'+
-            '<div style="font-size:11px;font-weight:700;color:'+(uncatNoBudgetPct>=100?rdFg:'var(--sub)')+';font-family:monospace">'+fmt(uncatSpent)+' spent</div>'+
-            (uncatProjected>0?'<div style="font-size:9px;color:var(--muted);font-family:monospace">of '+fmt(uncatProjected)+' scheduled</div>':'')+
-          '</div>'
-        )+
+    '<div onclick="'+(showUncatInput?'':'openCatSummary(\''+UNCATEGORISED_KEY+'\')')+'" style="background:var(--card-grad);border-radius:14px;padding:13px 14px;border:1px solid '+(isUncatInline?acFg:'var(--border)')+';margin-bottom:9px'+(showUncatInput?'':';cursor:pointer')+'">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">'+
+        '<div style="width:26px;height:26px;border-radius:7px;background:var(--surface);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:15px;color:var(--muted);opacity:.55">–</span></div>'+
+        '<span style="flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Uncategorised</span>'+
+        uncatUsedBadge+
       '</div>'+
-      (uncatHasBudget?
-        '<div style="position:relative;background:var(--surface);border-radius:4px;height:5px;overflow:hidden;margin-bottom:'+(showUncatInput?'8':'0')+'px">'+
-          (uncatProjPct>uncatPct?'<div style="position:absolute;left:0;top:0;height:100%;border-radius:5px;width:'+uncatProjPct+'%;background:'+uncatProjBarColor+'44"></div>':'')+
-          '<div style="position:relative;background:'+uncatBarColor+';height:100%;border-radius:5px;width:'+uncatPct+'%"></div>'+
-        '</div>':
-        (uncatSpent>0&&uncatProjected>0?
-          '<div style="position:relative;background:var(--surface);border-radius:4px;height:5px;overflow:hidden;margin-bottom:'+(showUncatInput?'8':'4')+'px">'+
-            '<div style="position:absolute;left:0;top:0;height:100%;border-radius:5px;width:100%;background:'+uncatNoBudgetBarColor+'44"></div>'+
-            '<div style="position:relative;background:'+uncatNoBudgetBarColor+';height:100%;border-radius:5px;width:'+uncatNoBudgetPct+'%"></div>'+
-          '</div>':
-          (uncatSpent>0?
-            '<div style="position:relative;background:var(--surface);border-radius:4px;height:5px;overflow:hidden;margin-bottom:'+(showUncatInput?'8':'4')+'px">'+
-              '<div style="position:relative;background:'+uncatNoBudgetBarColor+';height:100%;border-radius:5px;width:100%"></div>'+
-            '</div>':'')
-        )
-      )+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:9px">'+
+        _budgetStat('Spent',fmt(uncatSpent),'left')+
+        _budgetStat('Scheduled',fmt(uncatProjected),'center')+
+        _budgetStat('Target',uncatHasBudget?fmt(uncatBudget):'–','right')+
+      '</div>'+
+      '<div style="position:relative;background:var(--surface);border-radius:5px;height:6px;overflow:hidden'+(showUncatInput?';margin-bottom:8px':'')+'">'+
+        '<div style="height:100%;border-radius:5px;width:'+uncatBarPct+'%;background:'+uncatBarColor+'"></div>'+
+      '</div>'+
       (showUncatInput?
         '<input id="budget-inline-'+UNCATEGORISED_KEY+'" type="number" inputmode="decimal" placeholder="Monthly limit (blank = none)" value="'+(uncatBudget||'')+'" style="'+iS()+';font-size:13px;padding:8px 10px" oninput="setBudgetSilent(\''+UNCATEGORISED_KEY+'\',this.value)" onblur="setBudgetAndSave(\''+UNCATEGORISED_KEY+'\',this.value)'+(isUncatInline?';closeBudgetInlineEdit()':'')+'" onkeydown="if(event.key===\'Enter\'){this.blur();}"/>':'')+
     '</div>':'';
@@ -9718,10 +10383,10 @@ function renderBudgetsTab(){
         }).join('');
     }
     if(!out)out='<div style="text-align:center;color:var(--muted);padding:34px 0;font-size:13px">No activity yet this month</div>';
-    return header+hintText+out;
+    return header+remainingCard+hintText+out;
   }
   var rows=allRowObjs.map(function(x){return x.html;}).join('');
-  return header+catBarTop+hintText+(rows?_secLbl('Expenses \u0026 Bills'):'')+rows+incomeSection;
+  return header+remainingCard+effCard+catBarTop+hintText+(rows?_secLbl('Expenses \u0026 Bills'):'')+rows+incomeSection;
 }
 
 
@@ -10205,6 +10870,14 @@ window.setTxDateFrom=function(v){state.txTabDateFrom=v;setState({txTabRange:'cus
 window.setTxDateTo=function(v){state.txTabDateTo=v;setState({txTabRange:'custom'});};
 window.clearTxDates=function(){state.txTabDateFrom='';state.txTabDateTo='';setState({txTabRange:'last_30_days'});};
 window.setTxFilter=function(v){setState({txTabFilter:v});};
+/* Transaction row layout: default | luxe (v58.4). Persisted in uiPrefs like
+   the other display preferences — toggle button lives beside History. */
+window.toggleTxLayout=function(){
+  if(!state.uiPrefs)state.uiPrefs={};
+  state.uiPrefs.txLayout=(state.uiPrefs.txLayout==='luxe')?'default':'luxe';
+  save("uiPrefs",state.uiPrefs||{});
+  render();
+};
 window.toggleTxUnpaid=function(){
   var next=!(state.txTabUnpaid===true);
   /* transfers have no unpaid concept — snap to All when enabling */
@@ -10407,9 +11080,11 @@ function renderTransactionsTab(){
   /* Date range dropdown — non-bold, below search. Shares its row with the
      History button: the full activity log (search, filters, undo/redo) opens
      as a sheet from here now that it's no longer a bottom-nav tab. */
+  var txLuxe=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
   var rangeBtn='<div style="display:flex;gap:6px;margin-bottom:8px">'+
     '<button onclick="openTxRangePicker()" style="'+S({flex:'1',minWidth:'0',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:'10px',padding:'8px 12px',display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',fontFamily:'inherit'})+'"><span style="font-size:12px;font-weight:400;color:var(--sub)">'+rangeLabel+'</span><span style="font-size:10px;color:'+ac+';font-weight:400">▾</span></button>'+
     '<button onclick="openHistorySheet()" aria-label="History" style="'+S({flexShrink:'0',display:'flex',alignItems:'center',gap:'6px',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:'10px',padding:'8px 11px',cursor:'pointer',fontFamily:'inherit'})+'">'+ic('history','var(--sub)',15)+'<span style="font-size:12px;font-weight:400;color:var(--sub)">History</span></button>'+
+    '<button onclick="toggleTxLayout()" aria-label="'+(txLuxe?'Switch to standard layout':'Switch to Luxe layout')+'" title="'+(txLuxe?'Standard layout':'Luxe layout')+'" style="'+S({flexShrink:'0',display:'flex',alignItems:'center',background:txLuxe?td('accent'):'var(--surface)',border:'1px solid '+(txLuxe?ac:'var(--border)'),borderRadius:'10px',padding:'8px 11px',cursor:'pointer',fontFamily:'inherit'})+'">'+ic('layout',txLuxe?ac:'var(--sub)',15)+'</button>'+
   '</div>';
   /* Filter pills */
   var filterOpts=[['all','All'],['income','Income'],['bill','Bills'],['expense','Expenses'],['transfer','Transfers']];
@@ -10532,6 +11207,7 @@ function _collectPostedTx(fromDate,toDate,typeFilter,q,unpaidOnly){
 
 function _buildTxListHtml(){
   var ac=accent(),rdFg=typeRedFg(),bluFg=typeBlueFg();
+  var txLuxe=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
   var rd=txRangeDates(),from=rd.from,to=rd.to;
   var txFilter=state.txTabFilter||'all';
   var txSearchVal=state.txTabSearch||'',txSearchQ=txSearchVal.toLowerCase().trim();
@@ -10599,7 +11275,8 @@ function _buildTxListHtml(){
     var rows=txsForDay.map(function(r){
       var tx=r.tx,rowIdx=r.idx;
       var bal=unpaidMode?undefined:balAfter[rowIdx];
-      var rowHtml=txRow({label:tx.lbl,type:tx.type,cat:tx.cat,amount:tx.type==='income'?tx.amt:-tx.amt,balAfter:bal,isRecurring:tx.isRecurring,autopay:tx.item&&tx.item.autopay&&!tx.isTransfer,freq:(tx.isRecurring&&tx.item)?freqAbbr(tx.item):'',hideRecur:true,hideAuto:true,unpaid:!!tx.unpaid});
+      var rowOpts={label:tx.lbl,type:tx.type,cat:tx.cat,amount:tx.type==='income'?tx.amt:-tx.amt,balAfter:bal,isRecurring:tx.isRecurring,autopay:tx.item&&tx.item.autopay&&!tx.isTransfer,freq:(tx.isRecurring&&tx.item)?freqAbbr(tx.item):'',hideRecur:true,hideAuto:true,unpaid:!!tx.unpaid,accountId:(!tx.isTransfer&&tx.item)?tx.item.accountId:undefined,dueTime:(!tx.isTransfer&&tx.item)?tx.item.dueTime:undefined,dt:tx.dt};
+      var rowHtml=txLuxe?txRowLuxe(rowOpts):txRow(rowOpts);
       if(tx.isTransfer){
         /* Transfer: pass transfer-out type so swipeRow handles correctly */
         return swipeRow(tx.item.id,rowHtml,'transfer-out',tx.ds);
@@ -10831,6 +11508,54 @@ function txRow(opts){
   '</div>';
   return inner;
 }
+/*
+ * txRowLuxe — alternate "Luxe" transaction row: circular avatar, merchant name
+ * as the lead line, category (+ time when the item has a due time set) as a
+ * subtitle, amount top-right, account name beneath it. Trialled as a toggle
+ * next to the standard txRow layout (see toggleTxLayout / uiPrefs.txLayout).
+ * Same opts shape as txRow, plus accountId, dueTime ("HH:MM"), dt (Date).
+ * Uses only theme CSS vars / accent(), so it follows every theme, not a
+ * fixed palette.
+ */
+function txRowLuxe(opts){
+  var ac=accent(),rdFg=typeRedFg();
+  var type=opts.type||'expense';
+  var ci=catInfo(opts.cat||'other',type);
+  var isUncat=ci.key===UNCATEGORISED_KEY;
+  var amt=opts.amount||0;
+  var amtStr=amt>=0?('+'+fmt(amt)):('-'+fmt(Math.abs(amt)));
+  var amtColor=amt>=0?ac:'var(--text)';
+  var tileColor=isMono()?(isMonoLight()?'#EBEBEB':'#1E1E1E'):(ci.color+'12');
+  var iconColor=isMono()?(isMonoLight()?'#666666':'#777777'):(ci.color||'var(--muted)');
+  var iconKey=type==='income'?(ci.key!=='other'&&!isUncat?ci.icon:'income'):(isUncat?(type==='bill'?'bills':'expenses'):ci.icon);
+  var avatar='<div style="position:relative;width:44px;height:44px;border-radius:999px;background:'+tileColor+';border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(iconKey,iconColor,20)+recurIconBadge(opts.hideRecur?false:opts.isRecurring,opts.freq)+'</div>';
+  var timeStr='';
+  if(opts.dueTime&&opts.dueTime!=='00:00'&&opts.dt){
+    var tParts=(''+opts.dueTime).split(':');
+    var td_=new Date(opts.dt);
+    td_.setHours(parseInt(tParts[0])||0,parseInt(tParts[1])||0,0,0);
+    timeStr=td_.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+  }
+  var catLabel=(!isUncat&&ci.label)?ci.label:(type==='income'?'Income':'Uncategorised');
+  var subtitle=catLabel+(timeStr?' • '+timeStr:'');
+  var acct=opts.accountId!==undefined?getAccount(opts.accountId):null;
+  var acctStr=acct?acct.name:'';
+  var inner='<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;background:var(--card-grad);border-top:1px solid var(--border)"'+(opts.onclick&&!opts.onclickWrap?' onclick="'+opts.onclick+'"':'')+'>'+
+    '<div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1">'+
+      avatar+
+      '<div style="min-width:0">'+
+        '<div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+opts.label+'</div>'+
+        '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">'+subtitle+'</div>'+
+      '</div>'+
+    '</div>'+
+    '<div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;gap:2px">'+
+      '<div style="display:flex;align-items:center;gap:6px">'+statusMarkers(opts)+'<span style="font-size:14px;font-weight:700;color:'+amtColor+';font-family:monospace">'+amtStr+'</span></div>'+
+      (acctStr?'<span style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">'+escHtml(acctStr)+'</span>':
+        (opts.balAfter!==undefined?'<span style="font-size:9px;color:'+(opts.balAfter<0?rdFg:'var(--muted)')+';font-family:monospace">bal '+fmt(opts.balAfter)+'</span>':''))+
+    '</div>'+
+  '</div>';
+  return inner;
+}
 function catSelect(val,fn){
   var ci=val&&val!==UNCATEGORISED_KEY?catInfo(val):null;
   var btnBg=ci?ci.color+'22':'var(--surface)';
@@ -10913,25 +11638,44 @@ function renderCatPickerModal(){
     );
   }
   /* Main category list */
+  var searchBox=isIncome?'':'<input type="text" placeholder="Search categories…" value="'+escHtml(p.search||'')+'" style="'+iS()+';margin-bottom:10px" oninput="setCatPickerSearch(this.value)"/>';
+  var catList='<div id="catpicker-results">'+_catPickerListHtml()+'</div>';
+  var addBtn='<button onclick="openCatPickerNew()" style="'+S({width:"100%",background:td("accent"),border:"2px dashed "+ac+"55",borderRadius:"12px",padding:"13px",color:ac,fontWeight:700,fontSize:"13px",cursor:"pointer",fontFamily:"inherit",marginBottom:"8px"})+'">+ Create New Category</button>';
+  var cancelBtn='<button onclick="closeCatPicker()" style="'+S({width:"100%",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"12px",padding:"12px",color:"var(--sub)",fontWeight:600,fontSize:"13px",cursor:"pointer",fontFamily:"inherit"})+'">Cancel</button>';
+  return buildModal(title,searchBox+catList+addBtn+cancelBtn);
+}
+/* _catPickerListHtml: the category rows only (no search box / footer buttons) —
+   shared by the initial render and by _patchCatPickerList's live-search patch. */
+function _catPickerListHtml(){
+  var p=state.catPicker;if(!p)return'';
+  var isIncome=p.type==="income";
+  var cats=isIncome?incomeCats():allCatsSorted();
   var noneColor=isMono()?(isMonoLight()?'#555555':'#888888'):'#888888';
   var noneBtn='<button onclick="pickCat(\''+UNCATEGORISED_KEY+'\')" style="'+S({width:"100%",display:"flex",alignItems:"center",gap:"11px",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"10px",padding:"10px 14px",cursor:"pointer",fontFamily:"inherit",marginBottom:"4px",textAlign:"left"})+'">'+
     '<div style="width:32px;height:32px;border-radius:8px;background:var(--card-grad);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:'+noneColor+'">–</div>'+
     '<span style="font-size:13px;color:'+noneColor+'">None</span>'+
   '</button>';
-  var catList='<div style="margin-bottom:12px">'+
-    noneBtn+
-    cats.map(function(c){
-      var catColor=isMono()?(isMonoLight()?'#333333':'#CCCCCC'):c.color;
-      var catBg=isMono()?(isMonoLight()?'#EFEFEF':'#2A2A2A'):c.color+'22';
-      return '<button onclick="pickCat(\''+c.key+'\')" style="'+S({width:"100%",display:"flex",alignItems:"center",gap:"11px",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"10px",padding:"10px 14px",cursor:"pointer",fontFamily:"inherit",marginBottom:"4px",textAlign:"left"})+'">'+
-        '<div style="width:32px;height:32px;border-radius:8px;background:'+catBg+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(c.icon,catColor,18)+'</div>'+
-        '<span style="font-size:13px;color:'+catColor+';flex:1">'+c.label+'</span>'+
-      '</button>';
-    }).join('')+
-  '</div>';
-  var addBtn='<button onclick="openCatPickerNew()" style="'+S({width:"100%",background:td("accent"),border:"2px dashed "+ac+"55",borderRadius:"12px",padding:"13px",color:ac,fontWeight:700,fontSize:"13px",cursor:"pointer",fontFamily:"inherit",marginBottom:"8px"})+'">+ Create New Category</button>';
-  var cancelBtn='<button onclick="closeCatPicker()" style="'+S({width:"100%",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"12px",padding:"12px",color:"var(--sub)",fontWeight:600,fontSize:"13px",cursor:"pointer",fontFamily:"inherit"})+'">Cancel</button>';
-  return buildModal(title,catList+addBtn+cancelBtn);
+  function catRow(c){
+    var dispColor=isMono()?(isMonoLight()?'#333333':'#CCCCCC'):catColor(c);
+    var catBg=isMono()?(isMonoLight()?'#EFEFEF':'#2A2A2A'):catColor(c)+'22';
+    return '<button onclick="pickCat(\''+c.key+'\')" style="'+S({width:"100%",display:"flex",alignItems:"center",gap:"11px",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"10px",padding:"10px 14px",cursor:"pointer",fontFamily:"inherit",marginBottom:"4px",textAlign:"left"})+'">'+
+      '<div style="width:32px;height:32px;border-radius:8px;background:'+catBg+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(c.icon,dispColor,18)+'</div>'+
+      '<span style="font-size:13px;color:'+dispColor+';flex:1">'+c.label+'</span>'+
+    '</button>';
+  }
+  var q=(p.search||'').trim().toLowerCase();
+  if(isIncome||q){
+    /* Income stays a flat list (only 9 items); expense search results are flat too */
+    var flat=q?cats.filter(function(c){return c.label.toLowerCase().indexOf(q)!==-1;}):cats;
+    return (q?'':noneBtn)+
+      (flat.length?flat.map(catRow).join(''):'<div style="font-size:12px;color:var(--muted);padding:8px 2px">No categories match "'+escHtml(p.search)+'"</div>');
+  }
+  /* Expense picker, no search active: grouped by fiscal group with section headers */
+  var groups=allCatsGrouped();
+  return noneBtn+groups.map(function(g){
+    return '<div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:12px 2px 6px">'+escHtml(g.name)+'</div>'+
+      g.items.map(catRow).join('');
+  }).join('');
 }
 function noteField(f,noteFn){
   return field("Notes (optional)",'<textarea placeholder="Optional note or memo…" style="'+iS()+';resize:none;height:62px;line-height:1.4" oninput="'+noteFn+'(this.value)">'+(f.note||'')+'</textarea>');
@@ -11313,22 +12057,10 @@ function renderModal(){
        Collapse state is session-only (state._nwCollapse) — deliberately
        NOT persisted so the export/import shape is unchanged. */
     var _col=state._nwCollapse||{};
-    function _netOf(a){return (parseFloat(a.value)||0)-(parseFloat(a.debtOwing)||0);}
-    var nwSections=[
-      {key:'shares', label:'Shares', items:nwItems.filter(function(a){return !a.isDebt&&a.isShare;}),
-       sub:function(l){return l.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:(parseFloat(a.value)||0));},0);}},
-      {key:'secured',label:'Property & Loans', items:nwItems.filter(function(a){return !a.isDebt&&!a.isShare&&(a.isMortgage||a.isLoan);}),
-       sub:function(l){return l.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:_netOf(a));},0);}},
-      {key:'assets', label:'Assets', items:nwItems.filter(function(a){return !a.isDebt&&!a.isShare&&!a.isMortgage&&!a.isLoan;}),
-       sub:function(l){return l.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:_netOf(a));},0);}},
-      {key:'debts',  label:'Debts', items:nwItems.filter(function(a){return a.isDebt;}), neg:true,
-       sub:function(l){return -l.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:(parseFloat(a.debtOwing)||0));},0);}}
-    ].filter(function(sec){return sec.items.length>0;});
+    var nwSections=computeNwSections(nwItems).filter(function(sec){return sec.items.length>0;});
     /* Shared key→color map: composition-bar segments AND each group header's
        dot use this, so a segment and its row group are always the same hue. */
-    function _nwSecColor(key){
-      return key==='shares'?(ac_nw+'99'):(key==='secured'?blu_nw:(key==='debts'?rdFg_nw:'var(--sub)'));
-    }
+    function _nwSecColor(key){return nwSecColor(key);}
 
     /* ── Composition bar: proportional by real magnitude, with a 5%-of-total
        floor per segment so a dominant group (usually Property) can't shrink
@@ -11405,27 +12137,13 @@ function renderModal(){
     var sortOpts=[['value_desc','Value: high to low'],['value_asc','Value: low to high'],['name','Name (A–Z)'],['type','Type']];
     var sortLabel=(sortOpts.filter(function(o){return o[0]===nwSort;})[0]||sortOpts[0])[1];
     var sortOpen=!!state._nwSortMenu;
-    var tabBar=nwTabSel==='add'?'':
-      '<div style="margin-bottom:8px">'+
-        /* Compact sort pill, right-aligned (v53.9 — was a full-width bar) */
-        '<div style="display:flex;justify-content:flex-end">'+
-          '<button onclick="toggleNwSortMenu()" style="'+S({display:'flex',alignItems:'center',gap:'6px',background:'var(--surface)',border:'1px solid '+(sortOpen?ac_nw:'var(--border)'),borderRadius:'8px',padding:'5px 10px',cursor:'pointer',fontFamily:'inherit'})+'">'+
-            ic('sort',ac_nw,13)+
-            '<span style="font-size:11px;color:var(--text);font-weight:600;white-space:nowrap">'+sortLabel+'</span>'+
-            '<span style="display:flex;transform:rotate('+(sortOpen?'180deg':'0deg')+');transition:transform .15s">'+ic('down','var(--muted)',13)+'</span>'+
-          '</button>'+
-        '</div>'+
-        (sortOpen?
-          '<div style="background:var(--card-grad);border:1px solid transparent;border-radius:10px;margin-top:5px;overflow:hidden">'+
-            sortOpts.map(function(o,i){
-              var on=nwSort===o[0];
-              return '<button onclick="chooseNwSort(\''+o[0]+'\')" style="'+S({width:'100%',display:'flex',alignItems:'center',gap:'9px',background:on?td('accent'):'transparent',border:'none',borderTop:i?'1px solid var(--border)':'none',padding:'11px 13px',cursor:'pointer',fontFamily:'inherit'})+'">'+
-                '<span style="width:16px;display:flex;flex-shrink:0">'+(on?ic('check',ac_nw,15):'')+'</span>'+
-                '<span style="flex:1;text-align:left;font-size:13px;font-weight:'+(on?'700':'500')+';color:'+(on?ac_nw:'var(--text)')+'">'+o[1]+'</span>'+
-              '</button>';
-            }).join('')+
-          '</div>':'')+
-      '</div>';
+    /* Sort pill retired (v58.1) — the merged Portfolio-style view below has
+       its own search box and each category's list is already value-sorted
+       (see _portfolioFilteredSorted/_portfolioCatFilteredSorted), so a
+       separate sort control is no longer needed here. sortOpts/sortLabel/
+       sortOpen/nwSortList are kept (harmlessly unused in the add form path)
+       to avoid touching more call sites than necessary. */
+    var tabBar='';
 
     /* ── Frequency selector helper ── */
     function freqRow(freqUnitKey,freqIntKey,currentUnit,currentInt,prefix){
@@ -11437,11 +12155,6 @@ function renderModal(){
       '</div>';
     }
 
-    /* Tappable checkbox controlling whether an item counts toward net worth. */
-    function nwCheck(a){
-      var inc=!a.excludeFromNetWorth;
-      return '<button onclick="event.stopPropagation();toggleAssetInNetWorth('+a.id+')" title="'+(inc?'Counted in net worth — tap to exclude':'Excluded from net worth — tap to include')+'" style="'+S({width:'22px',height:'22px',borderRadius:'6px',border:'2px solid '+(inc?ac_nw:'var(--border)'),background:inc?ac_nw:'transparent',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,padding:'0'})+'">'+(inc?icS('check',at_nw,13):'')+'</button>';
-    }
     /* ── Share holding rows (tap to edit) ── */
     function renderShareRow(a){
       var qty=parseFloat(a.shareQty)||0;
@@ -11468,121 +12181,6 @@ function renderModal(){
           '</div>'+
           '<button onclick="event.stopPropagation();refreshOneShare('+a.id+')" '+(refreshing?'disabled':'')+' style="background:'+td("accent")+';border:none;color:'+ac_nw+';border-radius:7px;padding:5px 10px;cursor:'+(refreshing?'default':'pointer')+';font-family:inherit;flex-shrink:0;margin-left:6px;opacity:'+(refreshing?'.5':'1')+'" title="Update price">'+ic('refresh',ac_nw,14)+'</button>'+
         '</div>'+
-      '</div>';
-    }
-
-    /* ── Asset rows (non-debt) ── */
-    function renderAssetRow(a){
-      if(a.isShare)return renderShareRow(a);
-      if(a.isMortgage||a.isLoan)return renderSecuredRow(a);
-      var equity=(parseFloat(a.value)||0)-(parseFloat(a.debtOwing)||0);
-      var hasGrowth=a.growthAmount&&a.growthAmount!==0;
-      var hasDebt=parseFloat(a.debtOwing)>0;
-      var growthTag=hasGrowth?'<span style="font-size:9px;font-weight:600;color:'+ac_nw+';background:'+td("accent")+';border-radius:4px;padding:1px 5px;margin-left:4px">↑'+fmt(a.growthAmount)+'/'+( a.growthFreqUnit||'mo').slice(0,2)+'</span>':'';
-      var debtTag=hasDebt?'<span style="font-size:9px;font-weight:600;color:'+rdFg_nw+';background:'+td("red")+';border-radius:4px;padding:1px 5px;margin-left:2px">−'+fmt(a.debtOwing)+' owed</span>':'';
-      /* Collapsed single line by default (v53.9); tap toggles the editor. */
-      var open=!!(state._nwEditOpen&&state._nwEditOpen[a.id]);
-      var editPanel=open?
-        '<div style="border-top:1px solid var(--border);padding:8px 12px">'+
-          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">'+
-            '<div>'+
-              '<div style="font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:3px">Asset Value</div>'+
-              '<input type="number" inputmode="decimal" value="'+(a.value||0)+'" style="'+iS()+';font-family:monospace;font-size:13px;font-weight:700" '+
-                'onclick="event.stopPropagation()" oninput="editAssetField('+a.id+',\'value\',this.value)" onblur="saveAssetField('+a.id+',\'value\',this.value)" onchange="saveAssetField('+a.id+',\'value\',this.value)"/>'+
-            '</div>'+
-            (hasDebt?
-              '<div>'+
-                '<div style="font-size:9px;color:'+rdFg_nw+';font-weight:600;text-transform:uppercase;margin-bottom:3px">Owing</div>'+
-                '<input type="number" inputmode="decimal" value="'+(a.debtOwing||0)+'" style="'+iS()+';font-family:monospace;font-size:13px;font-weight:700" '+
-                  'onclick="event.stopPropagation()" oninput="editAssetField('+a.id+',\'debtOwing\',this.value)" onblur="saveAssetField('+a.id+',\'debtOwing\',this.value)" onchange="saveAssetField('+a.id+',\'debtOwing\',this.value)"/>'+
-              '</div>'
-            :'')+
-          '</div>'+
-          '<button onclick="event.stopPropagation();requestDeleteAsset('+a.id+')" style="'+S({width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:'6px',background:td('red'),border:'none',color:rdFg_nw,borderRadius:'8px',padding:'8px',cursor:'pointer',fontFamily:'inherit',fontSize:'12px',fontWeight:700,marginTop:'7px'})+'">'+icS('trash','currentColor',13)+' Delete</button>'+
-        '</div>':'';
-      return '<div onclick="toggleNwRowEdit('+a.id+')" style="background:linear-gradient(180deg,'+ac_nw+'12,'+ac_nw+'05),var(--surface);border-radius:10px;border:1px solid '+(open?ac_nw+'44':ac_nw+'26')+';margin-bottom:6px;overflow:hidden;cursor:pointer">'+
-        '<div style="display:flex;align-items:center;gap:9px;padding:10px 12px">'+
-          nwCheck(a)+
-          '<div style="width:36px;height:36px;border-radius:9px;background:'+ac_nw+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(a.icon||'home',ac_nw,20)+'</div>'+
-          '<div style="flex:1;min-width:0">'+
-            '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a.name+'</div>'+
-            '<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">'+growthTag+debtTag+'</div>'+
-          '</div>'+
-          '<div style="text-align:right;flex-shrink:0">'+
-            '<div style="font-size:14px;font-weight:700;color:'+ac_nw+';font-family:monospace">'+fmt(parseFloat(a.value)||0)+'</div>'+
-            (hasDebt?'<div style="font-size:10px;color:'+rdFg_nw+';font-family:monospace">equity '+fmt(equity)+'</div>':'')+
-          '</div>'+
-          '<span style="display:flex;flex-shrink:0;margin-left:2px;transform:rotate('+(open?'180deg':'0deg')+');transition:transform .15s">'+ic('down','var(--muted)',13)+'</span>'+
-        '</div>'+
-        editPanel+
-      '</div>';
-    }
-
-    /* ── Debt rows (standalone debts with no real asset) ── */
-    function renderDebtRow(a){
-      var owing=parseFloat(a.debtOwing)||0;
-      var pct=a._origOwing&&a._origOwing>0?Math.round((1-owing/a._origOwing)*100):0;
-      var progressBar=a._origOwing&&a._origOwing>0?
-        '<div style="height:4px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden">'+
-          '<div style="height:100%;background:'+ac_nw+';border-radius:2px;width:'+Math.min(100,pct)+'%"></div>'+
-        '</div>':'';
-      var payTag=a.debtPayment&&a.debtPayment>0?
-        '<span style="font-size:9px;font-weight:600;color:'+ac_nw+';background:'+td("accent")+';border-radius:4px;padding:1px 5px;margin-left:4px">−'+fmt(a.debtPayment)+'/'+( a.debtFreqUnit||'mo').slice(0,2)+'</span>':'';
-      return '<div onclick="openLiabilityWizard(\'debt\','+a.id+')" style="background:linear-gradient(180deg,'+rdFg_nw+'12,'+rdFg_nw+'05),var(--surface);border-radius:10px;border:1px solid '+rdFg_nw+'33;margin-bottom:6px;overflow:hidden;cursor:pointer">'+
-        '<div style="display:flex;align-items:center;gap:9px;padding:10px 12px">'+
-          nwCheck(a)+
-          '<div style="width:36px;height:36px;border-radius:9px;background:'+rdFg_nw+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(a.icon||'credit_card',rdFg_nw,20)+'</div>'+
-          '<div style="flex:1;min-width:0">'+
-            '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a.name+'</div>'+
-            '<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">'+payTag+'</div>'+
-            progressBar+
-          '</div>'+
-          '<div style="text-align:right;flex-shrink:0">'+
-            '<div style="font-size:14px;font-weight:700;color:'+rdFg_nw+';font-family:monospace">−'+fmt(owing)+'</div>'+
-            (a._origOwing&&a._origOwing>0?'<div style="font-size:10px;color:var(--muted)">'+(100-pct)+'% remaining</div>':'')+
-          '</div>'+
-          '<button onclick="event.stopPropagation();requestDeleteAsset('+a.id+')" style="background:'+td("red")+';border:none;color:'+rdFg_nw+';border-radius:7px;padding:4px 9px;cursor:pointer;font-family:inherit;font-size:12px;flex-shrink:0;margin-left:6px" title="Delete">'+icS('x','currentColor',14)+'</button>'+
-        '</div>'+
-      '</div>';
-    }
-
-    /* ── Secured row: one combined card (asset + loan) for mortgages and loans,
-       tap to edit via the wizard ── */
-    function renderSecuredRow(a){
-      var kind=_liabKindOf(a),valLabel=a.isLoan?'Value':'Property';
-      var value=parseFloat(a.value)||0;
-      var owing=parseFloat(a.debtOwing)||0;
-      var equity=value-owing;
-      var orig=parseFloat(a._origOwing)||0;
-      var paidPct=orig>0?Math.max(0,Math.min(100,Math.round((1-owing/orig)*100))):0;
-      var rate=parseFloat(a.mortgageRate)||0;
-      var pay=parseFloat(a.debtPayment)||0;
-      var freqShort=(a.debtFreqUnit||'months').slice(0,2);
-      var eqFg=equity>=0?ac_nw:rdFg_nw;
-      var rateTag=rate>0?'<span style="font-size:9px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1px 5px">'+rate+'% p.a.</span>':'';
-      var payTag=pay>0?'<span style="font-size:9px;font-weight:600;color:'+rdFg_nw+';background:'+td("red")+';border-radius:4px;padding:1px 5px">−'+fmt(pay)+'/'+freqShort+'</span>':'';
-      var progress=orig>0?
-        '<div style="margin-top:7px">'+
-          '<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:3px"><span>'+paidPct+'% paid off</span><span>'+fmt(owing)+' left</span></div>'+
-          '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;background:'+ac_nw+';border-radius:2px;width:'+paidPct+'%"></div></div>'+
-        '</div>':'';
-      return '<div onclick="openLiabilityWizard(\''+kind+'\','+a.id+')" style="background:linear-gradient(180deg,'+ac_nw+'12,'+ac_nw+'05),var(--surface);border-radius:10px;border:1px solid '+ac_nw+'26;margin-bottom:6px;overflow:hidden;cursor:pointer">'+
-        '<div style="display:flex;align-items:center;gap:9px;padding:11px 12px">'+
-          nwCheck(a)+
-          '<div style="width:36px;height:36px;border-radius:9px;background:'+ac_nw+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(isIconKey(a.icon)?a.icon:(a.isLoan?'loan':'mortgage'),ac_nw,20)+'</div>'+
-          '<div style="flex:1;min-width:0">'+
-            '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a.name+'</div>'+
-            '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:3px">'+
-              '<span style="font-size:9px;color:var(--muted)">'+valLabel+' '+fmt(value)+'</span>'+rateTag+payTag+
-            '</div>'+
-          '</div>'+
-          '<div style="text-align:right;flex-shrink:0">'+
-            '<div style="font-size:14px;font-weight:700;color:'+eqFg+';font-family:monospace">'+fmt(equity)+'</div>'+
-            '<div style="font-size:9px;color:var(--muted);font-weight:600;letter-spacing:.03em">EQUITY</div>'+
-          '</div>'+
-          '<button onclick="event.stopPropagation();requestDeleteAsset('+a.id+')" style="background:'+td("red")+';border:none;color:'+rdFg_nw+';border-radius:7px;padding:4px 9px;cursor:pointer;font-family:inherit;font-size:12px;flex-shrink:0;margin-left:6px" title="Delete">'+icS('x','currentColor',14)+'</button>'+
-        '</div>'+
-        (progress?'<div style="border-top:1px solid var(--border);padding:9px 12px">'+progress+'</div>':'')+
       '</div>';
     }
 
@@ -11760,52 +12358,20 @@ function renderModal(){
         '<button onclick="setNwTab(\'list\')" style="'+S({display:'flex',alignItems:'center',gap:'6px',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:'9px',padding:'7px 12px',color:'var(--sub)',fontWeight:600,fontSize:'12px',cursor:'pointer',fontFamily:'inherit',marginBottom:'12px'})+'">'+ic('back',accent(),14)+' Back</button>'+
         addForm;
     } else {
-      /* nwSections, _netOf, _col hoisted above nwSummary (v55.1) — shared
-         with the composition bar, single source of truth. */
-      var listHtml=nwSections.length?
-        nwSections.map(function(sec){
-          var rows=nwSortList(sec.items);
-          var subVal=sec.sub(sec.items);
-          var subColor=sec.neg?rdFg_nw:(subVal>=0?ac_nw:rdFg_nw);
-          var closed=!!_col[sec.key];
-          /* Shares header carries a compact refresh-prices button (v53.3 —
-             replaces the old full-width bar above the list). The collapse
-             toggle and the refresh control are SIBLING buttons in a flex row:
-             nesting a button inside a button is invalid HTML and taps would
-             fight on mobile WebViews. */
-          var _refreshing=!!state._sharesRefreshing;
-          var refreshBtn=sec.key==='shares'?
-            '<button onclick="refreshSharePrices({manual:true})" '+(_refreshing?'disabled':'')+' aria-label="Refresh share prices" title="Refresh share prices" style="'+S({display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,width:'26px',height:'26px',background:td('accent'),border:'1px solid '+ac_nw+'33',borderRadius:'7px',cursor:_refreshing?'default':'pointer',padding:'0',opacity:_refreshing?'.45':'1'})+'">'+ic('refresh',ac_nw,13)+'</button>':'';
-          var head='<div style="display:flex;align-items:center;gap:7px;padding-right:3px">'+
-            '<button onclick="toggleNwSection(\''+sec.key+'\')" style="'+S({flex:1,minWidth:0,display:"flex",alignItems:"center",gap:"7px",background:"transparent",border:"none",padding:"9px 3px 5px",cursor:"pointer",fontFamily:"inherit"})+'">'+
-              '<span style="display:flex;flex-shrink:0;transform:rotate('+(closed?'-90deg':'0deg')+');transition:transform .15s">'+ic('down','var(--muted)',13)+'</span>'+
-              '<span style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:'+_nwSecColor(sec.key)+'"></span>'+
-              '<span style="font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">'+sec.label+'</span>'+
-              '<span style="font-size:9px;font-weight:700;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:1px 6px">'+sec.items.length+'</span>'+
-              '<span style="flex:1"></span>'+
-              '<span style="font-size:12px;font-weight:700;font-family:monospace;color:'+subColor+'">'+(sec.neg&&subVal<0?'−'+fmt(-subVal):fmt(subVal))+'</span>'+
-            '</button>'+
-            refreshBtn+
-          '</div>';
-          var body=closed?'':rows.map(function(a){return a.isDebt?renderDebtRow(a):renderAssetRow(a);}).join('');
-          return '<div style="background:var(--card-grad);border:1px solid transparent;border-radius:12px;padding:2px 10px 10px;margin-bottom:10px">'+head+body+'</div>';
-        }).join(''):
-        emptyState('chart_line','Nothing here yet','Tap the + button to add an asset, debt,\nmortgage, loan or share holding.');
-      /* Floating add button + action menu */
-      var fab='<button onclick="toggleNwAddMenu()" aria-label="Add" style="position:fixed;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);width:54px;height:54px;border-radius:50%;background:'+ac_nw+';border:none;box-shadow:0 4px 16px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:265">'+ic(state._nwAddMenu?'x':'plus',at_nw,26)+'</button>';
-      var addMenu=state._nwAddMenu?
-        '<div onclick="toggleNwAddMenu()" style="position:fixed;inset:0;z-index:262;background:rgba(0,0,0,.45)">'+
-          '<div style="position:fixed;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 88px);display:flex;flex-direction:column;gap:9px;align-items:flex-end">'+
-            [['asset','Asset','home'],['debt','Debt','credit_card'],['mortgage','Mortgage','mortgage'],['loan','Loan','loan']].map(function(o){
-              return '<button onclick="event.stopPropagation();nwAddChoose(\''+o[0]+'\')" style="'+S({display:'flex',alignItems:'center',gap:'10px',background:'var(--card-grad)',border:'1px solid var(--border)',borderRadius:'13px',padding:'11px 16px',color:'var(--text)',fontWeight:600,fontSize:'14px',cursor:'pointer',fontFamily:'inherit',boxShadow:'0 3px 12px rgba(0,0,0,.35)',minWidth:'150px'})+'">'+ic(o[2],ac_nw,18)+'<span style="flex:1;text-align:left">'+o[1]+'</span></button>';
-            }).join('')+
-          '</div>'+
-        '</div>':'';
-      tabContent='<div style="padding-bottom:80px">'+listHtml+'</div>';
-      nwPinned=fab+addMenu;
+      /* v58.1: the old collapsible Shares/Property & Loans/Assets/Debts list
+         (+ floating FAB/add-menu) is retired here. Net Worth now hosts the
+         same hero + category sub-tab bar + search + list view that used to
+         live on the standalone Portfolio bottom-nav tab — renderPortfolioTab()
+         already builds that whole body (catBar+hero+stats+search+add
+         button+list+delete-confirm+mortgage/loan choice overlay) from
+         computeNwSections(), so it's reused as-is rather than duplicated.
+         No floating FAB here: each category's own inline "Add ___" button
+         (built inside renderPortfolioTab) covers adding for that category. */
+      tabContent='<div style="padding-bottom:24px">'+renderPortfolioTab()+'</div>';
+      nwPinned='';
     }
 
-    return buildModal("Net Worth",nwSummary+tabBar+tabContent,{fixedHeight:true,pinned:nwPinned+_assetDeleteConfirmHTML()});
+    return buildModal("Net Worth",nwSummary+tabBar+tabContent,{fixedHeight:true,pinned:nwPinned});
   }
   if(state.modal==="addPicker"){
     /* v56.0: layered "Add New" menu — each option is a top-lit gradient card
@@ -11875,7 +12441,6 @@ function renderModal(){
     if(_upM.showCalendarTab!==false)allM.push(["calendar","Calendar","calendar"]);
     if(_upM.showMoneyTab!==false)allM.push(["money","Recurring","wallet"]);
     if(_upM.showBudgetsTab!==false)allM.push(["budgets","Budgets","budgets"]);
-    if(_upM.showPortfolioTab!==false)allM.push(["portfolio","Portfolio","portfolio"]);
     var prefM=['overview','calendar','budgets'];
     var primM=[];
     prefM.forEach(function(k){var t=allM.filter(function(x){return x[0]===k;})[0];if(t)primM.push(t);});
@@ -12557,7 +13122,7 @@ function renderSettingsModal(){
     settingsNavBtn("Security","lock",(typeof AppLock!=='undefined'&&AppLock.enabled())?"PIN lock is on":"Protect the app with a PIN","security")+
     settingsNavBtn("Data","data","Export, import and reset your data","data")+
     settingsNavBtn("Help","info","App guide — tabs, features, and how-tos","help")+
-    '<button onclick="OTA.history()" style="'+S({width:"100%",display:"flex",alignItems:"center",gap:"10px",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"12px",padding:"10px 12px",cursor:"pointer",fontFamily:"inherit",marginBottom:"6px",textAlign:"left"})+'">'+
+    '<button onclick="try{OTA.history()}catch(e){alert(\'What\\\'s New couldn\\\'t open: \'+((e&&e.message)||e))}" style="'+S({width:"100%",display:"flex",alignItems:"center",gap:"10px",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"12px",padding:"10px 12px",cursor:"pointer",fontFamily:"inherit",marginBottom:"6px",textAlign:"left"})+'">'+
       '<div style="width:30px;height:30px;border-radius:8px;background:'+td("accent")+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic("sparkles",accent(),16)+'</div>'+
       '<div style="flex:1;min-width:0">'+
         '<div style="font-size:13px;font-weight:600;color:var(--text)">What\'s New</div>'+
@@ -12566,7 +13131,7 @@ function renderSettingsModal(){
       '<span style="font-size:14px;color:var(--muted)">›</span>'+
     '</button>'+
     ((typeof OTA!=='undefined'&&OTA.isAvailable&&OTA.isAvailable())?
-      '<button onclick="OTA.showPrompt()" style="'+S({width:"100%",textAlign:"left",background:"var(--card)",border:"1px solid "+accent(),borderRadius:"12px",padding:"14px 16px",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"12px",marginTop:"8px"})+'">'+
+      '<button onclick="try{OTA.showPrompt()}catch(e){alert(\'Couldn\\\'t open update prompt: \'+((e&&e.message)||e))}" style="'+S({width:"100%",textAlign:"left",background:"var(--card)",border:"1px solid "+accent(),borderRadius:"12px",padding:"14px 16px",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"12px",marginTop:"8px"})+'">'+
         ic('refresh',accent(),20)+
         '<div><div style="font-size:14px;font-weight:700;color:var(--text)">Update available'+((OTA.info()&&OTA.info().version)?' — v'+(''+OTA.info().version).replace(/\\.0$/,''):'')+'</div>'+
         '<div style="font-size:12px;color:var(--muted)">Tap to install the latest version</div></div>'+
@@ -12574,7 +13139,7 @@ function renderSettingsModal(){
     :'')+
     '<div style="text-align:center;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">'+
       '<div style="font-size:11px;color:var(--muted);font-weight:500">App Version '+APP_VERSION+'</div>'+
-      '<div id="check-updates-lnk" onclick="checkForUpdatesNow(this)" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:'+P.blue+';cursor:pointer">Check for Updates</div>'+
+      '<div id="check-updates-lnk" onclick="try{checkForUpdatesNow(this)}catch(e){alert(\'Check for Updates failed: \'+((e&&e.message)||e))}" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:'+P.blue+';cursor:pointer">Check for Updates</div>'+
     '</div>'
   );
 }
@@ -12713,7 +13278,6 @@ function renderSettingsSectionModal(section){
       uiToggleRow2('showCalendarTab','Calendar tab','Monthly calendar view with balance forecasts per day')+
       uiToggleRow2('showBudgetsTab','Budgets tab','Set spending limits and view category spend bar')+
       uiToggleRow2('showMoneyTab','Recurring tab','Combined Income, Bills, Expenses and Transfers in one tab')+
-      uiToggleRow2('showPortfolioTab','Portfolio tab','Track your real stock and ETF holdings with live prices and daily change')+
 
       '<div style="font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin:12px 0 6px;padding:0 2px">Recurring tab sections</div>'+
       uiToggleRow2('showBillsTab','Bills section','Recurring fixed bills')+
@@ -12771,15 +13335,35 @@ function renderSettingsSectionModal(section){
       }
       var removeBg2=isMono()?(isMonoLight()?'#F5EDED':'#2A2020'):'var(--dim-red)';
       var removeFg2=isMono()?(isMonoLight()?'#885555':'#AAAAAA'):P.red;
-      var catDispColor2=isMono()?(isMonoLight()?'#444444':'#CCCCCC'):c.color;
+      var catDispColor2=isMono()?(isMonoLight()?'#444444':'#CCCCCC'):catColor(c);
       return '<div onclick="openEditCat(\''+c.key+'\')" style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--surface);border-radius:9px;margin-bottom:5px;border:1px solid var(--border);cursor:pointer">'+
-        '<div style="width:32px;height:32px;border-radius:8px;background:'+c.color+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(c.icon,catDispColor2,18)+'</div>'+
+        '<div style="width:32px;height:32px;border-radius:8px;background:'+catColor(c)+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(c.icon,catDispColor2,18)+'</div>'+
         '<div style="flex:1;min-width:0">'+
           '<div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center">'+c.label+scopeBadge3(c.scope||'both')+'</div>'+
         '</div>'+
         '<button onclick="event.stopPropagation();removeCustomCat(\''+c.key+'\')" style="background:'+removeBg2+';border:none;color:'+removeFg2+';border-radius:6px;padding:3px 8px;cursor:pointer;font-family:inherit;font-size:11px">Remove</button>'+
       '</div>';
     }).join(''):'<div style="font-size:13px;color:var(--muted);margin-bottom:10px">No custom categories yet</div>')+
+    '<div style="font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin:12px 0 6px;padding:0 2px">Appearance</div>'+
+    (function(){
+      var goldOn=state.uiPrefs&&state.uiPrefs.catIconGold!==false;
+      var opts=[['1','Gold','Every icon in one gold tone'],['0','By group','Each fiscal group keeps its colour']];
+      return '<div style="background:var(--surface);border-radius:10px;border:1px solid var(--border);padding:11px;margin-bottom:6px">'+
+        '<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px">Category icon colour</div>'+
+        '<div style="font-size:10px;color:var(--muted);margin-bottom:9px">Applies to every default and custom category icon app-wide</div>'+
+        '<div style="display:flex;gap:6px">'+
+        opts.map(function(o){
+          var on=(o[0]==='1')===goldOn;
+          var bg=on?(isMonoLight()?'#DDDDDD':ac2):'var(--card)';
+          var bd=on?(isMonoLight()?'#BBBBBB':ac2):'var(--border)';
+          var fg=on?(isMonoLight()?'#111111':at2):'var(--sub)';
+          return '<button onclick="setUIPref(\'catIconGold\',\''+o[0]+'\')" style="flex:1;background:'+bg+';border:1px solid '+bd+';border-radius:8px;padding:8px 6px;color:'+fg+';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">'+o[1]+
+            '<div style="font-size:9px;font-weight:500;opacity:.8;margin-top:1px">'+o[2]+'</div>'+
+          '</button>';
+        }).join('')+
+        '</div>'+
+      '</div>';
+    })()+
     '<div style="background:var(--surface);border-radius:11px;padding:11px;border:1px solid var(--border);margin-top:7px;margin-bottom:12px">'+
       '<div style="font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;margin-bottom:9px">New Category</div>'+
       '<div style="display:flex;gap:7px;margin-bottom:7px;align-items:center">'+
@@ -13705,6 +14289,72 @@ function monthProjectedSpendByCategory(yr,mo){
   return out;
 }
 
+/* computeMonthlyEfficiency(yr,mo): month-over-month spending comparison used
+   by the Efficiency Score card at the top of the Budgets tab. Prefers the
+   immediately preceding month as the baseline; if that month has no spend
+   at all (new user, gap in history), falls back to averaging whichever of
+   the prior 6 months do have data, so the card still has something useful
+   to say. Also surfaces the single biggest per-category saving and the
+   single biggest per-category increase vs that baseline. */
+function computeMonthlyEfficiency(yr,mo){
+  var curByCat=monthSpendByCategory(yr,mo);
+  var curTotal=0;
+  Object.keys(curByCat).forEach(function(k){curTotal+=curByCat[k];});
+  var monthsBack=[];
+  for(var k=1;k<=6;k++){
+    var d=new Date(yr,mo-k,1);
+    monthsBack.push({yr:d.getFullYear(),mo:d.getMonth()});
+  }
+  var prevByCat=monthSpendByCategory(monthsBack[0].yr,monthsBack[0].mo);
+  var prevTotal=0;
+  Object.keys(prevByCat).forEach(function(ck){prevTotal+=prevByCat[ck];});
+  var baseByCat=prevByCat,baseTotal=prevTotal,baseLabel='last month',usedAvg=false;
+  if(baseTotal<=0){
+    var sums={},counts=0,totalSum=0;
+    monthsBack.forEach(function(m){
+      var byCat=monthSpendByCategory(m.yr,m.mo);
+      var t=0;
+      Object.keys(byCat).forEach(function(ck){t+=byCat[ck];sums[ck]=(sums[ck]||0)+byCat[ck];});
+      if(t>0)counts++;
+      totalSum+=t;
+    });
+    if(counts>0){
+      baseByCat={};
+      Object.keys(sums).forEach(function(ck){baseByCat[ck]=sums[ck]/counts;});
+      baseTotal=totalSum/counts;
+      baseLabel='your average';
+      usedAvg=true;
+    }
+  }
+  var hasData=baseTotal>0;
+  var pctChange=hasData?((curTotal-baseTotal)/baseTotal*100):null;
+  var moveKeys={};
+  Object.keys(curByCat).forEach(function(ck){moveKeys[ck]=1;});
+  Object.keys(baseByCat).forEach(function(ck){moveKeys[ck]=1;});
+  var moves=Object.keys(moveKeys).map(function(ck){
+    return {key:ck,delta:(curByCat[ck]||0)-(baseByCat[ck]||0)};
+  }).filter(function(m){return Math.abs(m.delta)>=1;});
+  moves.sort(function(a,b){return a.delta-b.delta;});
+  var saveMove=(moves.length&&moves[0].delta<0)?moves[0]:null;
+  var spendMove=(moves.length&&moves[moves.length-1].delta>0)?moves[moves.length-1]:null;
+  if(saveMove&&spendMove&&saveMove.key===spendMove.key)spendMove=null;
+  var budgetedCount=0,overCount=0;
+  allCatsSorted().forEach(function(c){
+    var b=(state.catBudgets&&state.catBudgets[c.key])||0;
+    if(b>0){budgetedCount++;if((curByCat[c.key]||0)>b)overCount++;}
+  });
+  var score=100;
+  if(hasData){
+    if(pctChange>0)score-=Math.min(35,pctChange*1.1);
+    else score+=Math.min(6,Math.abs(pctChange)*0.3);
+  }
+  if(budgetedCount>0)score-=Math.min(40,overCount*10);
+  score=Math.max(0,Math.min(100,Math.round(score)));
+  var level=score>=90?'OPTIMAL':score>=75?'GOOD':score>=55?'WATCH':'OVER BUDGET';
+  return {score:score,level:level,pctChange:pctChange,curTotal:curTotal,baseTotal:baseTotal,
+    baseLabel:baseLabel,usedAvg:usedAvg,hasData:hasData,saveMove:saveMove,spendMove:spendMove};
+}
+
 /* ── Category spend summary (Budgets tab → tap a category) ──────────────────
    Reuses monthSpendByCategory month-by-month so the figures match the budget
    bars exactly. Walks from the earliest bill/expense start month to now. */
@@ -13762,7 +14412,7 @@ function renderCatSummaryModal(){
 
   var tile=isUncat
     ?'<div style="width:30px;height:30px;border-radius:8px;background:var(--card-grad);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;color:var(--muted)">–</div>'
-    :'<div style="width:30px;height:30px;border-radius:8px;background:'+(isMono()?'var(--card)':(cat.color+'1A'))+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(cat.icon,isMono()?'var(--sub)':(cat.color||ac),17)+'</div>';
+    :'<div style="width:30px;height:30px;border-radius:8px;background:'+(isMono()?'var(--card)':(catColor(cat)+'1A'))+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(cat.icon,isMono()?'var(--sub)':(catColor(cat)||ac),17)+'</div>';
 
   var budgetLine=budget>0
     ?'<div style="margin-top:9px">'+
@@ -13876,7 +14526,7 @@ function renderBudgetsModal(){
     var projBarColor=projPct>=100?rdFg:(projPct>=80?orgFg:acFg);
     return '<div style="margin-bottom:14px">'+
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'+
-        '<div style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(c.icon,isMono()?(isMonoLight()?'#444444':'#CCCCCC'):(c.color||acFg),18)+'</div>'+
+        '<div style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(c.icon,isMono()?(isMonoLight()?'#444444':'#CCCCCC'):(catColor(c)||acFg),18)+'</div>'+
         '<span style="flex:1;font-size:13px;font-weight:600;color:var(--text)">'+c.label+'</span>'+
         (hasBudget?
           '<div style="text-align:right">'+
@@ -14357,8 +15007,8 @@ function renderBudgetCatEditModal(){
   var allC=allCats().concat([UNCATEGORISED_CAT]);
   var c=allC.find(function(x){return x.key===catKey;})||UNCATEGORISED_CAT;
   var budget=(state.catBudgets&&state.catBudgets[catKey])||0;
-  var iconColor=isMono()?(isMonoLight()?'#444444':'#CCCCCC'):(c.color||ac);
-  var tileBg=isMono()?(isMonoLight()?'#EBEBEB':'#1E1E1E'):(c.color?c.color+'22':'var(--surface)');
+  var iconColor=isMono()?(isMonoLight()?'#444444':'#CCCCCC'):(catColor(c)||ac);
+  var tileBg=isMono()?(isMonoLight()?'#EBEBEB':'#1E1E1E'):(c.color?catColor(c)+'22':'var(--surface)');
   var header='<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">'+
     '<div style="width:36px;height:36px;border-radius:9px;background:'+tileBg+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(c.icon,iconColor,20)+'</div>'+
     '<span style="font-size:16px;font-weight:700;color:var(--text)">'+c.label+'</span>'+
