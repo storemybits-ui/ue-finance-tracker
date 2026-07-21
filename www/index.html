@@ -58,7 +58,7 @@ body.okuyasu #bg-blobs{background:linear-gradient(315deg,rgba(74,46,143,0.22) 0%
   } catch(e){}
 })();
 </script>
-<title>finance-tracker v59.0</title>
+<title>finance-tracker v59.1</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-serif}
@@ -421,10 +421,20 @@ body.dark select option{background:#13161F}
 <div id="bg-blobs"></div>
 <div id="root"></div>
 <script>
-var APP_VERSION="59.0";
+var APP_VERSION="59.1";
 /* ── Changelog: shown after an update installs. Keyed by app version. ──────────
    Add a new entry each release with short, user-facing bullet points. ────────── */
 var CHANGELOG = {
+  "59.1": [
+    "Fixed a hardware-back double-fire: two independent back-press systems could both handle a single swipe, so closing What's New or the Help section could take Settings all the way down with it. Now only the first responder acts.",
+    "Transfers between accounts: a single transfer now shows as ONE row (\"Account \u2192 Account\") instead of two \u2014 a long-standing bug meant the calendar showed a separate outflow and inflow entry per transfer, and the inflow leg had never been given a name, so it displayed literally as \"undefined\".",
+    "Fixed a one-time transfer not posting its paid status immediately, even though the balance moved right away \u2014 it stayed swipeable as \"unpaid\", and swiping it would move the money a second time. It's now marked paid at creation, matching the balance change.",
+    "Overview's balance chart, the Calendar month grid, and the Remaining Budget card now sit on the same ring-glow hero card as Net Worth/Portfolio.",
+    "Efficiency Score card now shows on the Pie and Rings budget chart styles too, not just Bars. Remaining Budget also now appears on Rings.",
+    "Fixed the Efficiency Score unfairly rewarding categories with a bill due later this month (e.g. a mortgage not yet posted) that was fully paid last month \u2014 it read as a big \"saving\" when really it just wasn't due yet. Now compares both months through the same day-of-month.",
+    "Fixed Daily Limit advice ignoring bills still scheduled later this month \u2014 it divided (target minus what's already been paid) by days left, so an unpaid rent or mortgage due later looked like free daily spending money. It now reserves scheduled-but-unpaid bills first.",
+    "Fixed Import never finding your exports on Android: Export saves to the app's Cache folder (Directory.Documents needs storage permissions this app doesn't request), but Import was still only looking in Documents \u2014 a mismatch left over from before that Cache workaround existed. Import now looks in the same place Export actually writes."
+  ],
   "59.0": [
     "What's New, Check for Updates and the Update available banner now report the actual error (via an alert) if the OTA module fails to run, instead of silently doing nothing \u2014 needed to diagnose an OTA/update-check issue that showed no visible failure on tap."
   ],
@@ -1901,13 +1911,16 @@ function heroS(extra){
 function insetS(extra){
   return 'background:var(--surface);border:none;border-radius:8px'+(extra?';'+extra:'');
 }
-/* heroRingWrap (v55.1): the ONE deliberate rainbow-gradient moment, reserved
-   for the single most important hero on a screen (currently: Net Worth
-   total only — the retired all-over --card-grad rainbow is NOT restored
-   elsewhere). Same --hero gradient and fixed 44px settle point as heroS(),
-   wrapped in a 1.5px --hero-ring border instead of the flat --hero-border,
-   so it reads as a frame rather than a fill. Caller supplies only the
-   INNER content; padding goes on that content, not on this wrapper. */
+/* heroRingWrap (v55.1, extended v59.1): the ring-glow hero treatment,
+   originally reserved for the Net Worth total only, now also used for the
+   single most important hero on the Overview, Calendar, and Budgets tabs
+   (the balance chart, the month grid, and the Remaining Budget card).
+   Still capped at ONE per screen — the "at most two heroes per screen,
+   never nest hero inside hero" rule still applies. Same --hero gradient and
+   fixed 44px settle point as heroS(), wrapped in a 1.5px --hero-ring border
+   instead of the flat --hero-border, so it reads as a frame rather than a
+   fill. Caller supplies only the INNER content; padding goes on that
+   content, not on this wrapper. */
 function heroRingWrap(innerHtml){
   return '<div style="border-radius:17px;padding:1.5px;background:var(--hero-ring);box-shadow:var(--hero-shadow);margin-bottom:16px">'+
     '<div style="background:linear-gradient(180deg,var(--hero) 0%,var(--card) 44px);border-radius:15.5px">'+innerHtml+'</div>'+
@@ -2089,12 +2102,12 @@ function typeBadge(t){
   return badgeTD(t,"var(--c-exp-bg)","var(--c-exp-fg)");
 }
 function typeBg(t){
-  if(t==="transfer-out"||t==="transfer-in")return isMono()?(isMonoLight()?'#EFEFEF':'#222222'):(isCrimson()?'#1A1020':'var(--dim-purple)');
+  if(t==="transfer")return isMono()?(isMonoLight()?'#EFEFEF':'#222222'):(isCrimson()?'#1A1020':'var(--dim-purple)');
   if(isMono())return isMonoLight()?(t==="income"?"#EBEBEB":t==="bill"?"#EEEEEE":"#F0F0F0"):(t==="income"?"#2A2A2A":t==="bill"?"#222222":"#1E1E1E");
   return t==="income"?"var(--c-inc-bg)":t==="bill"?"var(--c-bill-bg)":"var(--c-exp-bg)";
 }
 function typeFg(t){
-  if(t==="transfer-out"||t==="transfer-in")return isMono()?(isMonoLight()?'#555555':'#AAAAAA'):(isCrimson()?'#7A6080':P.purple);
+  if(t==="transfer")return isMono()?(isMonoLight()?'#555555':'#AAAAAA'):(isCrimson()?'#7A6080':P.purple);
   if(isMono())return isMonoLight()?(t==="income"?"#222222":t==="bill"?"#444444":"#333333"):(t==="income"?"#DDDDDD":t==="bill"?"#AAAAAA":"#BBBBBB");
   return t==="income"?"var(--c-inc-fg)":t==="bill"?"var(--c-bill-fg)":"var(--c-exp-fg)";
 }
@@ -4569,14 +4582,27 @@ function buildMonthMap(yr,mo){
       add(d,Object.assign({},e,{type:"expense",amount:-amt,name:lbl,category:cat}));
     });
   });
-  /* Transfers: show as outflow on fromId account, inflow on toId account */
+  /* Transfers: v59.1 — one combined row per occurrence ("AccName -> AccName"),
+     not a separate outflow row on fromId and inflow row on toId. Previously
+     each leg was pushed via Object.assign({},tx,...) without ever setting
+     .name (transfers only carry .note), so the row rendered literally as
+     "undefined"; and because both legs were net-opposite amounts, viewing
+     "All accounts" showed the same transfer twice.
+     amount semantics: viewing a single account (accFilter set), show that
+     account's own leg so day in/out totals stay correct. Viewing all
+     accounts combined, a transfer between your own accounts has zero net
+     effect on total assets, so amount is 0 (keeps balance/day-total math
+     correct) while _displayAmount carries the real amount for the row UI. */
   (state.transfers||[]).forEach(function(tx){
     var fromMatch=!accFilter||(tx.fromId===accFilter);
     var toMatch=!accFilter||(tx.toId===accFilter);
     if(!fromMatch&&!toMatch)return;
+    if(tx.toId===tx.fromId)return;
     anchorHits(tx,yr,mo).forEach(function(d){
-      if(fromMatch)add(d,Object.assign({},tx,{type:"transfer-out",amount:-tx.amount,_txId:tx.id}));
-      if(toMatch&&tx.toId!==tx.fromId)add(d,Object.assign({},tx,{type:"transfer-in",amount:tx.amount,_txId:tx.id}));
+      var fromAcc=getAccount(tx.fromId),toAcc=getAccount(tx.toId);
+      var nm=(fromAcc?fromAcc.name:'?')+' \u2192 '+(toAcc?toAcc.name:'?');
+      var amt=accFilter?(fromMatch?-tx.amount:tx.amount):0;
+      add(d,Object.assign({},tx,{type:"transfer",amount:amt,_displayAmount:tx.amount,name:nm,category:"transfer",_txId:tx.id}));
     });
   });
 
@@ -4592,8 +4618,7 @@ function buildMonthMap(yr,mo){
     var _todayDs=new Date(yr,mo,curDay).toDateString();
     var todayPaidSum=0,todayUnpaidSum=0;
     (map[curDay]?map[curDay].events:[]).forEach(function(e){
-      var _isTransfer=e.type==='transfer-out'||e.type==='transfer-in';
-      var _paid=_isTransfer?isPaid('transfer-out',e._txId||e.id,_todayDs):isPaid(e.type,e.id,_todayDs);
+      var _paid=isPaid(e.type,e.id,_todayDs);
       if(_paid)todayPaidSum+=e.amount; else todayUnpaidSum+=e.amount;
     });
     /* Today's cell = projected end-of-day (current balance + today's still-upcoming events). */
@@ -4674,15 +4699,19 @@ function getTimeline(start,end){
         events.push({date:new Date(cc),label:lbl,amount:-amt,type:"expense",id:ex.id,category:cat,dueTime:dt,accountId:ex.accountId||defaultAccountId(),key:"e"+ex.id+ds});
       }
     });
+    /* v59.1: one combined row per occurrence ("AccName -> AccName"), not a
+       separate outflow row on fromId and inflow row on toId — see the
+       matching fix in buildMonthMap for the full rationale. */
     (state.transfers||[]).forEach(function(tx){
       var fromMatch=!accFilter||(tx.fromId===accFilter);
       var toMatch=!accFilter||(tx.toId===accFilter);
       if(!fromMatch&&!toMatch)return;
+      if(tx.toId===tx.fromId)return;
       if(anchorHitsDate(tx.startDate,tx,cc)){
         var fromAcc=getAccount(tx.fromId),toAcc=getAccount(tx.toId);
-        var label=(tx.note||"Transfer")+" ("+((fromAcc?fromAcc.icon:"")+"→"+(toAcc?toAcc.icon:""))+")";
-        if(fromMatch)events.push({date:new Date(cc),label:label,amount:-tx.amount,type:"transfer-out",id:tx.id,category:"transfer",dueTime:"",accountId:tx.fromId,key:"txo"+tx.id+ds});
-        if(toMatch&&tx.toId!==tx.fromId)events.push({date:new Date(cc),label:label,amount:tx.amount,type:"transfer-in",id:tx.id,category:"transfer",dueTime:"",accountId:tx.toId,key:"txi"+tx.id+ds});
+        var label=(fromAcc?fromAcc.name:"?")+" \u2192 "+(toAcc?toAcc.name:"?");
+        var amt=accFilter?(fromMatch?-tx.amount:tx.amount):0;
+        events.push({date:new Date(cc),label:label,amount:amt,_displayAmount:tx.amount,type:"transfer",id:tx.id,category:"transfer",dueTime:"",accountId:accFilter||tx.fromId,key:"tx"+tx.id+ds});
       }
     });
     cur.setDate(cur.getDate()+1);
@@ -4883,9 +4912,9 @@ function autoPostDueItems(){
         var occDate=new Date(yr,mo,d);
         var dateStr=occDate.toDateString();
         var dueDateTime=itemDueDateTime(tx,dateStr);
-        if(dueDateTime<=now&&!isPaid("transfer-out",tx.id,dateStr)){
+        if(dueDateTime<=now&&!isPaid("transfer",tx.id,dateStr)){
           if(!state.paidInstances)state.paidInstances={};
-          var key=paidKey("transfer-out",tx.id,dateStr);
+          var key=paidKey("transfer",tx.id,dateStr);
           state.paidInstances[key]=true;
           var fromAcc2=getAccount(tx.fromId),toAcc2=getAccount(tx.toId);
           if(fromAcc2)fromAcc2.balance-=tx.amount;
@@ -6070,7 +6099,7 @@ function _calSearchResultsHtml(csOverride){
     var gHdr=dateGroupHdr(gLbl,gNet,{hasRecur:hasRecurF,hasAuto:hasAutoF,hasPaid:hasPaidF});
     var gRows=gi.map(function(tx){
       var inner=txRow({label:tx.lbl,type:tx.type,cat:tx.cat,amount:tx.type==='income'?tx.amt:-tx.amt,unpaid:!!tx.unpaid});
-      return swipeRow(tx.item.id,inner,tx.isTransfer?'transfer-out':tx.type,tx.ds);
+      return swipeRow(tx.item.id,inner,tx.type,tx.ds);
     }).join('');
     return '<div class="date-group" style="background:var(--card-grad);border:1px solid transparent;border-radius:12px;margin-bottom:4px;overflow:hidden">'+gHdr+gRows+'</div>';
   }).join('');
@@ -6508,7 +6537,7 @@ window.payNow=function(type,id,dateStr){
   var key=paidKey(type,id,dateStr);
   if(state.paidInstances[key])return;
   /* Handle transfer types */
-  if(type==="transfer-out"||type==="transfer-in"){
+  if(type==="transfer"){
     var tx=(state.transfers||[]).find(function(x){return x.id===id;});
     if(!tx)return;
     state.paidInstances[key]=true;
@@ -6545,7 +6574,7 @@ window.unPay=function(type,id,dateStr){
   var key=paidKey(type,id,dateStr);
   if(!state.paidInstances[key])return;
   /* Handle transfer types */
-  if(type==="transfer-out"||type==="transfer-in"){
+  if(type==="transfer"){
     var tx=(state.transfers||[]).find(function(x){return x.id===id;});
     if(!tx)return;
     delete state.paidInstances[key];
@@ -6758,12 +6787,15 @@ window.executeTransfer=function(){
   if(isOnce||rec.autopay){
     fromAcc.balance-=amt;
     toAcc.balance+=amt;
-    /* Mark first occurrence as posted so autoPostDueItems doesn't double-post */
-    if(!isOnce&&rec.autopay){
-      var pKey=paidKey("transfer-out",rec.id,new Date(rec.startDate+"T00:00:00").toDateString());
-      if(!state.paidInstances)state.paidInstances={};
-      state.paidInstances[pKey]=true;
-    }
+    /* v59.1: mark the occurrence paid so it doesn't linger as a swipeable
+       "unpaid" row after the balance has already moved — that mismatch was
+       letting a second swipe double-post the same transfer. Covers BOTH the
+       one-time case (previously never marked at all) and the recurring
+       first-occurrence case. */
+    var _occDs=(rec.startDate?new Date(rec.startDate+"T00:00:00"):today).toDateString();
+    var pKey=paidKey("transfer",rec.id,_occDs);
+    if(!state.paidInstances)state.paidInstances={};
+    state.paidInstances[pKey]=true;
   }
   recordHistory("transferred","Transfer: "+(rec.note)+" "+fromAcc.icon+"→"+toAcc.icon+" ("+fmt(amt)+")",{
     transfer:JSON.parse(JSON.stringify(rec)),
@@ -7305,9 +7337,12 @@ window.exportSelectAll=function(){
 };
 window.exportSelectNone=function(){state._exportSelected=[];patchModal();};
 window.importData=function(){
-  /* Native (Capacitor): read straight from the Documents folder — the same place
-     export writes to — instead of the WebView file picker (which defaults to
-     Downloads). Mirrors _capacitorExport's directory:'DOCUMENTS'. */
+  /* v59.1: read from Directory.Cache — the same place _capacitorExport
+     actually writes to (Directory.Documents needs Android storage
+     permissions this app never requests, so export deliberately uses Cache
+     + the Share sheet instead — see _capacitorExport's comment). This used
+     to look in Documents, which export never wrote to, so Import always
+     came up empty regardless of how many exports had been done. */
   var _capP=window.Capacitor&&window.Capacitor.Plugins;
   if(_capP&&_capP.Filesystem){ _capacitorImport(); return; }
   /* Native path: request file from native layer */
@@ -7327,8 +7362,8 @@ window.importData=function(){
   };inp.click();
 };
 
-/* Native import via Capacitor Filesystem — lists JSON exports in the device's
-   Documents folder (where export saves them) and lets the user pick one.
+/* Native import via Capacitor Filesystem — lists JSON exports in Directory.Cache
+   (where _capacitorExport actually saves them) and lets the user pick one.
    Requires: npm install @capacitor/filesystem  (then: npx cap sync) */
 function _capacitorImport(){
   var P=window.Capacitor&&window.Capacitor.Plugins;
@@ -7336,7 +7371,7 @@ function _capacitorImport(){
     alert('Import needs the Filesystem plugin.\nRun: npm install @capacitor/filesystem\nThen: npx cap sync');
     return;
   }
-  P.Filesystem.readdir({path:'',directory:'DOCUMENTS'})
+  P.Filesystem.readdir({path:'',directory:'CACHE'})
     .then(function(res){
       var entries=(res&&res.files)||[];
       /* Capacitor versions return either an array of strings or of {name,...} */
@@ -7344,24 +7379,26 @@ function _capacitorImport(){
         .filter(function(n){return /\.json$/i.test(n);})
         .sort(function(a,b){return a<b?1:(a>b?-1:0);}); /* newest-named first */
       if(!names.length){
-        alert('No exports found in Documents.\n\nExport a backup first — it saves a .json file to your Documents folder, which you can then import here.');
+        alert('No exports found.\n\nTap Export first — it saves a .json backup, which you can then pick here to import.');
         return;
       }
       state._importFiles=names;
       setState({modal:'importFilePicker',_settingsSection:null});
     })
     .catch(function(e){
-      alert('Could not read the Documents folder: '+((e&&e.message)||e));
+      alert('Could not read exported backups: '+((e&&e.message)||e));
     });
 }
 
-/* importFromDocuments: read the chosen Documents file and hand off to applyImportJSON. */
+/* importFromDocuments: read the chosen backup file (from Directory.Cache,
+   where export saves them — name kept for compatibility with existing
+   onclick call sites) and hand off to applyImportJSON. */
 window.importFromDocuments=function(idx){
   var P=window.Capacitor&&window.Capacitor.Plugins;
   var files=state._importFiles||[];
   var name=files[idx];
   if(!P||!P.Filesystem||!name)return;
-  P.Filesystem.readFile({path:name,directory:'DOCUMENTS',encoding:'utf8'})
+  P.Filesystem.readFile({path:name,directory:'CACHE',encoding:'utf8'})
     .then(function(res){
       state._importFiles=null;
       applyImportJSON(res&&res.data!==undefined?res.data:res);
@@ -7698,7 +7735,7 @@ window.exportTransactionsCSV=function(){
 
   if(txFilter==='all'||txFilter==='transfer'){
     (state.transfers||[]).forEach(function(tx){
-      var prefix='transfer-out:'+tx.id+':';
+      var prefix='transfer:'+tx.id+':';
       Object.keys(state.paidInstances||{}).forEach(function(k){
         if(k.indexOf(prefix)!==0)return;
         var ds=k.slice(prefix.length);
@@ -7706,7 +7743,7 @@ window.exportTransactionsCSV=function(){
         if(isNaN(dt.getTime()))return;
         if(dt<fromDate||dt>toDate)return;
         var fromAcc=getAccount(tx.fromId),toAcc=getAccount(tx.toId);
-        var lbl=(tx.note||'Transfer')+' ('+( fromAcc?fromAcc.icon+fromAcc.name:'?')+'→'+(toAcc?toAcc.icon+toAcc.name:'?')+')';
+        var lbl=(fromAcc?fromAcc.name:'?')+' \u2192 '+(toAcc?toAcc.name:'?');
         rows.push({dt:dt,type:'transfer',name:lbl,amt:tx.amount,cat:'transfer',acc:fromAcc?fromAcc.name:''});
       });
     });
@@ -7761,13 +7798,13 @@ window.exportHistoryCSV=function(){
   addPostedH(state.bills,'bill');
   addPostedH(state.expenses,'expense');
   (state.transfers||[]).forEach(function(tx){
-    var prefix='transfer-out:'+tx.id+':';
+    var prefix='transfer:'+tx.id+':';
     Object.keys(state.paidInstances||{}).forEach(function(k){
       if(k.indexOf(prefix)!==0)return;
       var ds=k.slice(prefix.length),dt=new Date(ds);
       if(isNaN(dt.getTime())||dt<fromDate||dt>toDate)return;
       var fA=getAccount(tx.fromId),tA=getAccount(tx.toId);
-      rows.push({dt:dt,type:'transfer',name:(tx.note||'Transfer')+'('+(fA?fA.name:'?')+'→'+(tA?tA.name:'?')+')',amt:tx.amount,cat:'transfer',acc:fA?fA.name:''});
+      rows.push({dt:dt,type:'transfer',name:(fA?fA.name:'?')+' \u2192 '+(tA?tA.name:'?'),amt:tx.amount,cat:'transfer',acc:fA?fA.name:''});
     });
   });
   if(!rows.length){alert('No posted transactions in the selected date range.');return;}
@@ -8240,7 +8277,7 @@ document.addEventListener('click',function(e){
 /* swipeRow: tap = edit, swipe left = pay + delete */
 /* When dateStr is provided, Edit opens instance modal (with "Change All" button inside). */
 function swipeRow(id,content,type,dateStr){
-  var isTransfer=type==="transfer-out"||type==="transfer-in";
+  var isTransfer=type==="transfer";
   var ds=dateStr?('\''+dateStr+'\''):'null';
   var posted=dateStr?isPaid(type,id,dateStr):false;
   var postBtnColor,postBtnBg,postIcon,postLabel,postAction;
@@ -8988,7 +9025,7 @@ function renderOverviewHeroBlock(){
          as long as the touch is held, wherever it wanders within the card.
          Taps fall through as clicks to the chart (day select), the strip
          buttons, and the header stats. */
-      return '<div id="hero-card" onpointerdown="_heroRangeScrubStart(event)" onpointermove="_heroRangeScrubMove(event)" onpointerup="_heroRangeScrubEnd(event)" onpointercancel="_heroRangeScrubEnd(event)" style="'+heroS()+';margin-bottom:8px;padding:12px 14px 6px;position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none">'+
+      return heroRingWrap('<div id="hero-card" onpointerdown="_heroRangeScrubStart(event)" onpointermove="_heroRangeScrubMove(event)" onpointerup="_heroRangeScrubEnd(event)" onpointercancel="_heroRangeScrubEnd(event)" style="padding:12px 14px 6px;position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none">'+
         /* Tap-anywhere dismiss layer — persists across drag repaints. */
         '<div id="chart-popup-backdrop" onclick="dismissChartPopups()" style="position:fixed;inset:0;z-index:50;background:transparent;display:'+(((state._heroSel!=null&&state._heroSel>=1&&state._heroSel<hf.pts.length)||state._bpTip)?'block':'none')+'"></div>'+
         '<div id="hero-chart-body">'+_hBody(hf)+'</div>'+
@@ -9007,7 +9044,7 @@ function renderOverviewHeroBlock(){
           '<span id="hero-today-btn" onclick="'+(_o0!==0?'heroToday()':'')+'" style="flex:1;cursor:'+(_o0!==0?'pointer':'default')+';display:flex;align-items:center;justify-content:center;gap:3px;font-weight:700;color:'+(_o0!==0?ac:'currentColor')+'">'+_heroMidHTML(_o0)+'</span>'+
           '<span onclick="heroPage(1)" style="cursor:pointer;font-weight:700;display:flex;align-items:center;gap:3px;padding:2px 0 2px 8px;flex-shrink:0"><span id="hero-end-lbl">'+_hEndLblFor(_o0)+'</span>'+icS('right','currentColor',9)+'</span>'+
         '</div>'+
-      '</div>';
+      '</div>');
     })());
 }
 
@@ -9719,17 +9756,27 @@ function renderUpcoming(){
     var ds=ev.date.toDateString();
     var paid=isPaid(ev.type,ev.id,ds);
     if(paid)return'';
-    var isTransfer=ev.type==="transfer-out"||ev.type==="transfer-in";
+    var isTransfer=ev.type==="transfer";
     var rdFg_=typeRedFg();
     var isToday=ds===today.toDateString();
     var _src=(!isTransfer)?((ev.type==='income'?state.income:ev.type==='bill'?state.bills:state.expenses)||[]).find(function(x){return x.id===ev.id;}):null;
     var _isRecur=_src&&((_src.freqUnit&&_src.freqUnit!=='once')||(_src.frequency&&_src.frequency!=='once'));
     var _evMk=statusMarkers({isRecurring:_isRecur,freq:_src?freqAbbr(_src):'',autopay:(!isTransfer&&ev.autopay),type:ev.type});
+    /* v59.1: a transfer viewed across all accounts combined has zero net
+       effect on total assets (ev.amount is 0 by design — see getTimeline),
+       so show the real amount neutrally rather than as income/expense. When
+       viewing a single account, ev.amount is already correctly signed for
+       that account's own leg, so it colors like any other in/outflow. */
+    var _txNeutral=isTransfer&&ev.amount===0;
+    var _rowAmt=_txNeutral?(ev._displayAmount!==undefined?ev._displayAmount:0):ev.amount;
+    var _purpleFg=isMono()?(isMonoLight()?'#555555':'#AAAAAA'):(isCrimson()?'#9A80B8':P.purple);
+    var _rowColor=_txNeutral?_purpleFg:(ev.amount>0?accent():rdFg_);
+    var _rowSign=_txNeutral?'':(ev.amount>0?"+":"");
     var balRight='<div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;gap:1px">'+
-      '<div style="display:flex;align-items:center;gap:8px">'+_evMk+'<div style="font-size:13px;font-weight:700;color:'+(ev.amount>0?accent():rdFg_)+';font-family:monospace">'+(ev.amount>0?"+":"")+fmt(ev.amount)+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+_evMk+'<div style="font-size:13px;font-weight:700;color:'+_rowColor+';font-family:monospace">'+_rowSign+fmt(_rowAmt)+'</div></div>'+
       '<div style="font-size:9px;color:'+(ev.balance<0?rdFg_:'var(--muted)')+';font-family:monospace;letter-spacing:.01em">bal '+fmt(ev.balance)+'</div>'+
     '</div>';
-    var ci=isTransfer?{icon:"transfers",label:ev.type==="transfer-out"?"Transfer Out":"Transfer In",color:P.purple,key:"transfer"}:catInfo(ev.category||"other",ev.type);
+    var ci=isTransfer?{icon:"transfers",label:"Transfer",color:P.purple,key:"transfer"}:catInfo(ev.category||"other",ev.type);
     var isUncat_ev=ci.key===UNCATEGORISED_KEY;
     var tileColor=isMono()?(isMonoLight()?'#EBEBEB':'#1E1E1E'):(ci.color+'12');
     var iconColor=isMono()?(isMonoLight()?'#666666':'#777777'):(ci.color||'var(--muted)');
@@ -9808,7 +9855,7 @@ function renderUpcoming(){
     /* Compute chips from events */
     var srcAll=[].concat(state.income,state.bills,state.expenses);
     var hasRecurUp=dayEvs.some(function(ev){var s=srcAll.find(function(x){return x.id===ev.id;});return s&&((s.freqUnit&&s.freqUnit!=='once')||(s.frequency&&s.frequency!=='once'));});
-    var hasAutoUp=dayEvs.some(function(ev){return ev.autopay&&ev.type!=='transfer-out'&&ev.type!=='transfer-in';});
+    var hasAutoUp=dayEvs.some(function(ev){return ev.autopay&&ev.type!=='transfer';});
     var header=dateGroupHdr(dayLabel,dayNet,{hasRecur:hasRecurUp,hasAuto:hasAutoUp,hasPaid:false},isToday?accent():'var(--muted)');
     var rows=dayEvs.map(function(ev){return makeEvRow(ev,false);}).join('');
     return '<div class="date-group" style="background:var(--card-grad);border:1px solid transparent;border-radius:12px;margin-bottom:4px;overflow:hidden">'+header+rows+'</div>';
@@ -9832,7 +9879,7 @@ function renderUpcoming(){
       var dayLabel2=dayDate2.toLocaleDateString("en-US",{weekday:'short',month:'short',day:'numeric'});
       var rdFg2=typeRedFg();
       var hasRecurOvd=dayO.some(function(o){return o.item&&((o.item.freqUnit&&o.item.freqUnit!=='once')||(o.item.frequency&&o.item.frequency!=='once'));});
-      var hasAutoOvd=dayO.some(function(o){return o.item&&o.item.autopay&&o.type!=='transfer-out'&&o.type!=='transfer-in';});
+      var hasAutoOvd=dayO.some(function(o){return o.item&&o.item.autopay&&o.type!=='transfer';});
       var header2=dateGroupHdr(dayLabel2,undefined,{hasRecur:hasRecurOvd,hasAuto:hasAutoOvd,hasPaid:false},rdFg2)+
         '<div style="display:none"></div>'; /* placeholder — overdue header uses red label via dateGroupHdr */
       /* rebuild with the overdue "!" badge on the right */
@@ -9944,7 +9991,7 @@ function renderCalendarFlow(){
       dd.events.map(function(e){
         var paid=isPaid(e.type,e.id,selDate.toDateString());
         var src=(e.type==="income"?state.income:e.type==="bill"?state.bills:state.expenses||[]).find(function(x){return x.id===e.id;})||{};
-        var inner=txRow({label:e.name,type:e.type,cat:e.category,amount:e.amount,isRecurring:src.freqUnit&&src.freqUnit!=='once',autopay:src.autopay,paid:paid,freq:(src.freqUnit&&src.freqUnit!=='once')?freqAbbr(src):''});
+        var inner=txRow({label:e.name,type:e.type,cat:e.category,amount:e.amount,displayAmount:e._displayAmount,isRecurring:src.freqUnit&&src.freqUnit!=='once',autopay:src.autopay,paid:paid,freq:(src.freqUnit&&src.freqUnit!=='once')?freqAbbr(src):''});
         return swipeRow(e.id,inner,e.type,selDate.toDateString());
       }).join('');
     detail='<div style="margin-top:11px">'+
@@ -9967,11 +10014,13 @@ function renderCalendarFlow(){
   '</div>'+
   // Calendar grid — one-shot swipe slide (v53.18): the class is consumed here
   // so day selection and other re-renders don't replay the animation.
-  (function(){var sl=state._calSlide;state._calSlide=null;return '<div'+(sl==='l'?' class="cal-slide-l"':(sl==='r'?' class="cal-slide-r"':''))+' style="background:var(--card-grad);border-radius:13px;padding:11px;border:1px solid transparent;margin-bottom:11px">';})()+
-    '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">'+
-      (function(){var ws2=state.calWeekStart||0;var rotated=DAYS_S.slice(ws2).concat(DAYS_S.slice(0,ws2));return rotated.map(function(d){return '<div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:3px 0;background:var(--surface);border-radius:6px;">'+d+'</div>';}).join('');})()+'</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">'+cells+'</div>'+
-  '</div>'+
+  heroRingWrap(
+    (function(){var sl=state._calSlide;state._calSlide=null;return '<div'+(sl==='l'?' class="cal-slide-l"':(sl==='r'?' class="cal-slide-r"':''))+' style="padding:11px">';})()+
+      '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">'+
+        (function(){var ws2=state.calWeekStart||0;var rotated=DAYS_S.slice(ws2).concat(DAYS_S.slice(0,ws2));return rotated.map(function(d){return '<div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:3px 0;background:var(--surface);border-radius:6px;">'+d+'</div>';}).join('');})()+'</div>'+
+      '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">'+cells+'</div>'+
+    '</div>'
+  )+
   '</div>'+ /* close cal-swipe-zone — detail and month list are outside swipe zone */
   detail;
 
@@ -10024,7 +10073,7 @@ function renderCalendarFlow(){
       var gHdr=dateGroupHdr(gLbl,gNet,{hasRecur:hasRecurCal,hasAuto:hasAutoCal,hasPaid:hasPaidCal});
       var gRows=gi.map(function(e){
         var src=(e.type==="income"?state.income:e.type==="bill"?state.bills:state.expenses).find(function(x){return x.id===e.id;})||{};
-        var inner=txRow({label:e.name,type:e.type,cat:e.category,amount:e.amount});
+        var inner=txRow({label:e.name,type:e.type,cat:e.category,amount:e.amount,displayAmount:e._displayAmount});
         return swipeRow(e.id,inner,e.type,e.dateStr);
       }).join('');
       return '<div class="date-group" style="background:var(--card-grad);border:1px solid transparent;border-radius:12px;margin-bottom:4px;overflow:hidden">'+gHdr+gRows+'</div>';
@@ -10123,18 +10172,34 @@ function renderBudgetsTab(){
      that has a target set, and shows what's left against those targets plus a
      daily-limit figure derived from the current burn rate and days left in the
      viewed month. Mirrors the per-category hasBudget/pctRaw logic below so the
-     top-level number always agrees with the category cards underneath it. */
-  var _budTargetTotal=0,_budSpentTotal=0;
+     top-level number always agrees with the category cards underneath it.
+     v59.1: the daily-limit figure previously divided (target - PAID spend)
+     by days left, which ignored bills/expenses in budgeted categories that
+     are scheduled later this month but not yet paid (e.g. a mortgage due on
+     the 28th read as "not spent" until paid, making the whole target look
+     free to spend day-to-day). _budScheduledUnpaid reserves that committed-
+     but-unpaid amount before dividing, so the advice reflects what's truly
+     still available. "% Used" and "Over budget" keep comparing target vs.
+     actual paid spend, unchanged — only the daily-limit math changes. */
+  var _budTargetTotal=0,_budSpentTotal=0,_budScheduledUnpaid=0;
+  var _monthProjByCat=monthProjectedSpendByCategory(yr,mo);
   allCatsSorted().concat([{key:UNCATEGORISED_KEY}]).forEach(function(c){
     var b=(state.catBudgets&&state.catBudgets[c.key])||0;
-    if(b>0){_budTargetTotal+=b;_budSpentTotal+=(spendByCat[c.key]||0);}
+    if(b>0){
+      _budTargetTotal+=b;
+      var _paidC=spendByCat[c.key]||0;
+      _budSpentTotal+=_paidC;
+      var _projC=_monthProjByCat[c.key]||0;
+      if(_projC>_paidC)_budScheduledUnpaid+=(_projC-_paidC);
+    }
   });
   var _budRemaining=_budTargetTotal-_budSpentTotal;
   var _budPctUsed=_budTargetTotal>0?Math.round((_budSpentTotal/_budTargetTotal)*100):0;
   var _daysInMonth=new Date(yr,mo+1,0).getDate();
   var _isCurMonth=(yr===today.getFullYear()&&mo===today.getMonth());
   var _daysLeft=_isCurMonth?Math.max(1,_daysInMonth-today.getDate()+1):_daysInMonth;
-  var _dailyLimit=_budRemaining>0?(_budRemaining/_daysLeft):0;
+  var _budAvailForDaily=Math.max(0,_budRemaining-_budScheduledUnpaid);
+  var _dailyLimit=_budAvailForDaily>0?(_budAvailForDaily/_daysLeft):0;
   var _monthElapsedPct=Math.min(100,Math.max(0,Math.round(((_daysInMonth-_daysLeft)/_daysInMonth)*100)));
   var _remColor=_budRemaining<0?rdFg:(_budPctUsed>=80?orgFg:acFg);
   var _dailyLimitRow=_budRemaining>0?
@@ -10142,8 +10207,8 @@ function renderBudgetsTab(){
      '<span style="font-size:13px;font-weight:700;color:var(--text);font-family:monospace">'+fmt(_dailyLimit)+'/day</span>'):
     ('<span style="font-size:11px;color:var(--muted)">Status</span>'+
      '<span style="font-size:13px;font-weight:700;color:'+rdFg+'">Over budget by '+fmt(Math.abs(_budRemaining))+'</span>');
-  var remainingCard=(!isEditMode&&_budTargetTotal>0)?(
-    '<div style="background:var(--card-grad);border-radius:14px;padding:14px 16px;border:1px solid var(--border);margin-bottom:12px">'+
+  var remainingCard=(!isEditMode&&_budTargetTotal>0)?heroRingWrap(
+    '<div style="padding:14px 16px">'+
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'+
         '<div style="width:42px;height:42px;border-radius:12px;background:'+td(_budRemaining<0?'red':(_budPctUsed>=80?'orange':'accent'))+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+
           icS('wallet',_remColor,19)+
@@ -10162,7 +10227,7 @@ function renderBudgetsTab(){
         '<div style="background:var(--surface);border-radius:5px;height:5px;overflow:hidden">'+
           '<div style="height:100%;border-radius:5px;width:'+_monthElapsedPct+'%;background:'+acFg+'"></div>'+
         '</div>'+
-        '<div style="font-size:9px;color:var(--muted);margin-top:6px">'+(_isCurMonth?(_daysLeft+' day'+(_daysLeft===1?'':'s')+' left this month · based on current target vs. spend'):(_daysInMonth+'-day month view'))+'</div>'+
+        '<div style="font-size:9px;color:var(--muted);margin-top:6px">'+(_isCurMonth?(_daysLeft+' day'+(_daysLeft===1?'':'s')+' left this month'+(_budScheduledUnpaid>0?' · reserves '+fmt(_budScheduledUnpaid)+' in bills still due':' · based on current target vs. spend')):(_daysInMonth+'-day month view'))+'</div>'+
       '</div>'+
     '</div>'
   ):'';
@@ -10331,7 +10396,7 @@ function renderBudgetsTab(){
           '<div style="font-size:8px;color:var(--muted);font-family:monospace">sched '+fmtS(v.projected)+'</div>',
           v.projPct);
       }).join('');
-      return header+hintText+
+      return header+remainingCard+effCard+hintText+
         (expRings?_secLbl('Expenses \u0026 Bills')+'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:10px">'+expRings+'</div>':'')+
         (incRings?_secLbl('Income')+'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px">'+incRings+'</div>':'');
     }
@@ -10383,7 +10448,7 @@ function renderBudgetsTab(){
         }).join('');
     }
     if(!out)out='<div style="text-align:center;color:var(--muted);padding:34px 0;font-size:13px">No activity yet this month</div>';
-    return header+remainingCard+hintText+out;
+    return header+remainingCard+effCard+hintText+out;
   }
   var rows=allRowObjs.map(function(x){return x.html;}).join('');
   return header+remainingCard+effCard+catBarTop+hintText+(rows?_secLbl('Expenses \u0026 Bills'):'')+rows+incomeSection;
@@ -11177,13 +11242,13 @@ function _collectPostedTx(fromDate,toDate,typeFilter,q,unpaidOnly){
   if(!unpaidOnly&&(txFilter==='all'||txFilter==='transfer')){
     (state.transfers||[]).forEach(function(tx){
       var isRecurring=tx.freqUnit&&tx.freqUnit!=='once';
-      var prefix='transfer-out:'+tx.id+':';
+      var prefix='transfer:'+tx.id+':';
       Object.keys(state.paidInstances||{}).forEach(function(k){
         if(k.indexOf(prefix)!==0)return;
         var ds=k.slice(prefix.length),dt=new Date(ds);
         if(isNaN(dt.getTime())||dt<fromDate||dt>toDate)return;
         var fromAcc=getAccount(tx.fromId),toAcc=getAccount(tx.toId);
-        var lbl=(tx.note||'Transfer')+' ('+(fromAcc?fromAcc.icon+fromAcc.name:'?')+'→'+(toAcc?toAcc.icon+toAcc.name:'?')+')';
+        var lbl=(fromAcc?fromAcc.name:'?')+' \u2192 '+(toAcc?toAcc.name:'?');
         txRows.push({type:'transfer',item:tx,ds:ds,dt:dt,amt:tx.amount,lbl:lbl,cat:'transfer',isRecurring:isRecurring,isTransfer:true});
         totalSpend+=tx.amount;
       });
@@ -11278,8 +11343,7 @@ function _buildTxListHtml(){
       var rowOpts={label:tx.lbl,type:tx.type,cat:tx.cat,amount:tx.type==='income'?tx.amt:-tx.amt,balAfter:bal,isRecurring:tx.isRecurring,autopay:tx.item&&tx.item.autopay&&!tx.isTransfer,freq:(tx.isRecurring&&tx.item)?freqAbbr(tx.item):'',hideRecur:true,hideAuto:true,unpaid:!!tx.unpaid,accountId:(!tx.isTransfer&&tx.item)?tx.item.accountId:undefined,dueTime:(!tx.isTransfer&&tx.item)?tx.item.dueTime:undefined,dt:tx.dt};
       var rowHtml=txLuxe?txRowLuxe(rowOpts):txRow(rowOpts);
       if(tx.isTransfer){
-        /* Transfer: pass transfer-out type so swipeRow handles correctly */
-        return swipeRow(tx.item.id,rowHtml,'transfer-out',tx.ds);
+        return swipeRow(tx.item.id,rowHtml,'transfer',tx.ds);
       }
       /* Income/Bill/Expense: swipe to edit instance or delete */
       return swipeRow(tx.item.id,rowHtml,tx.type,tx.ds);
@@ -11481,9 +11545,14 @@ function txRow(opts){
   var type=opts.type||'expense';
   var ci=catInfo(opts.cat||'other',type);
   var isUncat=ci.key===UNCATEGORISED_KEY;
-  var amt=opts.amount||0;
-  var amtStr=amt>=0?('+'+fmt(amt)):('-'+fmt(Math.abs(amt)));
-  var amtColor=amt>=0?ac:rdFg;
+  /* v59.1: a transfer viewed across all accounts combined nets to 0 (no
+     effect on total assets), so opts.amount is 0 by design in that case —
+     opts.displayAmount carries the real magnitude for the row. Shown
+     neutrally (no +/-, purple) rather than as income (green) or spend (red). */
+  var isNeutralTransfer=opts.cat==='transfer'&&!opts.amount&&opts.displayAmount!==undefined;
+  var amt=isNeutralTransfer?opts.displayAmount:(opts.amount||0);
+  var amtStr=isNeutralTransfer?fmt(amt):(amt>=0?('+'+fmt(amt)):('-'+fmt(Math.abs(amt))));
+  var amtColor=isNeutralTransfer?(isMono()?(isMonoLight()?'#555555':'#AAAAAA'):(isCrimson()?'#9A80B8':P.purple)):(amt>=0?ac:rdFg);
   var tileColor=isMono()?(isMonoLight()?'#EBEBEB':'#1E1E1E'):(ci.color+'12');
   var iconColor=isMono()?(isMonoLight()?'#666666':'#777777'):(ci.color||'var(--muted)');
   /* Income: fall back to the "income" icon when category is other/uncategorised,
@@ -14239,10 +14308,15 @@ function monthProjectedIncomeByCategory(yr,mo){
   });
   return out;
 }
-function monthSpendByCategory(yr,mo){
+/* v59.1: optional cutoffDay lets a caller compare "spend through day N" of one
+   month against "spend through day N" of another — needed so an in-progress
+   current month (where a bill due later this month hasn't posted yet) isn't
+   compared against a fully-elapsed prior month. See computeMonthlyEfficiency. */
+function monthSpendByCategory(yr,mo,cutoffDay){
   var out={};
   state.bills.forEach(function(b){
     anchorHits(b,yr,mo).forEach(function(d){
+      if(cutoffDay!==undefined&&d>cutoffDay)return;
       var ds=new Date(yr,mo,d).toDateString();
       if(!isPaid("bill",b.id,ds))return;
       var ov=getInstOverride("bill",b.id,ds);
@@ -14253,6 +14327,7 @@ function monthSpendByCategory(yr,mo){
   });
   state.expenses.forEach(function(e){
     anchorHits(e,yr,mo).forEach(function(d){
+      if(cutoffDay!==undefined&&d>cutoffDay)return;
       var ds=new Date(yr,mo,d).toDateString();
       if(!isPaid("expense",e.id,ds))return;
       var ov=getInstOverride("expense",e.id,ds);
@@ -14295,9 +14370,18 @@ function monthProjectedSpendByCategory(yr,mo){
    at all (new user, gap in history), falls back to averaging whichever of
    the prior 6 months do have data, so the card still has something useful
    to say. Also surfaces the single biggest per-category saving and the
-   single biggest per-category increase vs that baseline. */
+   single biggest per-category increase vs that baseline.
+   v59.1: when (yr,mo) is the current, still-in-progress month, every month
+   in the comparison is truncated to "spend through day N" (N = today's day
+   of month) via monthSpendByCategory's cutoffDay. Without this, a bill due
+   later this month (e.g. a mortgage not yet posted) reads as 0 spent this
+   month against a fully-elapsed prior month's full payment — showing up as
+   a large fake "saving" and inflating the score, when really it's just not
+   due yet. Viewing a past, fully-elapsed month uses full totals as before. */
 function computeMonthlyEfficiency(yr,mo){
-  var curByCat=monthSpendByCategory(yr,mo);
+  var isCurMonth=(yr===today.getFullYear()&&mo===today.getMonth());
+  var cutoff=isCurMonth?today.getDate():undefined;
+  var curByCat=monthSpendByCategory(yr,mo,cutoff);
   var curTotal=0;
   Object.keys(curByCat).forEach(function(k){curTotal+=curByCat[k];});
   var monthsBack=[];
@@ -14305,14 +14389,14 @@ function computeMonthlyEfficiency(yr,mo){
     var d=new Date(yr,mo-k,1);
     monthsBack.push({yr:d.getFullYear(),mo:d.getMonth()});
   }
-  var prevByCat=monthSpendByCategory(monthsBack[0].yr,monthsBack[0].mo);
+  var prevByCat=monthSpendByCategory(monthsBack[0].yr,monthsBack[0].mo,cutoff);
   var prevTotal=0;
   Object.keys(prevByCat).forEach(function(ck){prevTotal+=prevByCat[ck];});
-  var baseByCat=prevByCat,baseTotal=prevTotal,baseLabel='last month',usedAvg=false;
+  var baseByCat=prevByCat,baseTotal=prevTotal,baseLabel=isCurMonth?'last month to date':'last month',usedAvg=false;
   if(baseTotal<=0){
     var sums={},counts=0,totalSum=0;
     monthsBack.forEach(function(m){
-      var byCat=monthSpendByCategory(m.yr,m.mo);
+      var byCat=monthSpendByCategory(m.yr,m.mo,cutoff);
       var t=0;
       Object.keys(byCat).forEach(function(ck){t+=byCat[ck];sums[ck]=(sums[ck]||0)+byCat[ck];});
       if(t>0)counts++;
@@ -14322,7 +14406,7 @@ function computeMonthlyEfficiency(yr,mo){
       baseByCat={};
       Object.keys(sums).forEach(function(ck){baseByCat[ck]=sums[ck]/counts;});
       baseTotal=totalSum/counts;
-      baseLabel='your average';
+      baseLabel=isCurMonth?'your average to date':'your average';
       usedAvg=true;
     }
   }
@@ -15114,7 +15198,7 @@ function renderImportFilePickerModal(){
   var rows=files.map(function(name,i){
     /* Try to surface the date suffix (…-YYYY-MM-DD.json) as a subtitle */
     var dm=name.match(/(\d{4}-\d{2}-\d{2})/);
-    var sub=dm?dm[1]:'Documents';
+    var sub=dm?dm[1]:'Backup';
     return '<button onclick="importFromDocuments('+i+')" style="'+S({width:'100%',display:'flex',alignItems:'center',gap:'11px',padding:'12px 13px',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:'12px',marginBottom:'8px',cursor:'pointer',fontFamily:'inherit',textAlign:'left'})+'">'+
       '<div style="width:36px;height:36px;border-radius:9px;background:'+acBg+';border:1px solid '+acBd+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('upload',ac,18)+'</div>'+
       '<div style="flex:1;min-width:0">'+
@@ -15124,10 +15208,10 @@ function renderImportFilePickerModal(){
     '</button>';
   }).join('');
   var body=
-    '<div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Choose a backup from your <b style="color:var(--text)">Documents</b> folder to import.</div>'+
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Choose a backup to import — these are the .json files your last few exports saved.</div>'+
     rows+
     '<button onclick="closeModal()" style="'+S({width:'100%',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:'12px',padding:'12px',color:'var(--sub)',fontWeight:600,fontSize:'13px',cursor:'pointer',fontFamily:'inherit',marginTop:'4px'})+'">Cancel</button>';
-  return buildModal('Import from Documents', body);
+  return buildModal('Import a Backup', body);
 }
 
 function renderImportConfirmModal(){
@@ -16251,6 +16335,22 @@ window.addEventListener('resize', function(){
    - history.pushState entries mirror the open modal count.
    - popstate fires when the user swipes back or presses the browser back button.
    ─────────────────────────────────────────────────────────────────────────── */
+/* v59.1: this file wires up TWO independent back-press bridges below — the
+   NativeBridge/'backbutton'-DOM-event system in this IIFE, and a separate
+   Capacitor.Plugins.App.addListener('backButton',...) system a few script
+   blocks down. On some native builds a single physical back-press/swipe
+   reaches BOTH, so the second bridge's handler runs immediately after the
+   first and pops an extra layer (e.g. What's New closes correctly, then the
+   second call — finding it already gone — falls through and closes Settings
+   too). This guard makes only the first bridge to see a given press act;
+   the other is a no-op for it. Shared via window since the two systems live
+   in separate script blocks/closures. */
+window._backGuardOk=function(){
+  var now=Date.now();
+  if(now-(window._lastBackTs||0)<400){ return false; }
+  window._lastBackTs=now;
+  return true;
+};
 (function(){
   /* Lazy detection: AndroidBridge may be injected after IIFE runs, so check at call time */
   function _isAndroid(){ return !!window.AndroidBridge; }
@@ -16294,6 +16394,10 @@ window.addEventListener('resize', function(){
 
   /* ── Central handler ─────────────────────────────────────────────── */
   function _handleBack(){
+    /* v59.1: skip if the other back-press bridge already handled this
+       physical gesture (see guard comment above the IIFE). */
+    if(!window._backGuardOk()){ return true; }
+
     /* 0 — Lock screen: consume, app stays locked */
     if(typeof AppLock!=='undefined'&&AppLock.isShowing()){ return true; }
 
@@ -16447,6 +16551,10 @@ window.addEventListener('resize', function(){
   function register(){
     if(!(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App)) return false;
     Capacitor.Plugins.App.addListener('backButton',function(){
+      /* v59.1: skip if the NativeBridge/_handleBack system already handled
+         this physical gesture — critical to check BEFORE calling
+         handleHardwareBack(), since a falsy return there triggers exitApp(). */
+      if(!window._backGuardOk()) return;
       if(!window.handleHardwareBack()){
         if(Capacitor.Plugins.App.exitApp) Capacitor.Plugins.App.exitApp();
       }

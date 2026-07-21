@@ -1,7 +1,14 @@
 {
-  "version": "59.0",
-  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v59.0.zip",
+  "version": "59.1",
+  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v59.1.zip",
   "notes": [
-    "What's New, Check for Updates and the Update available banner now report the actual error (via an alert) if the OTA module fails to run, instead of silently doing nothing \\u2014 needed to diagnose an OTA/update-check issue that showed no visible failure on tap."
+    "Fixed a hardware-back double-fire: two independent back-press systems could both handle a single swipe, so closing What's New or the Help section could take Settings all the way down with it. Now only the first responder acts.",
+    "Transfers between accounts: a single transfer now shows as ONE row (\"Account \\u2192 Account\") instead of two \\u2014 a long-standing bug meant the calendar showed a separate outflow and inflow entry per transfer, and the inflow leg had never been given a name, so it displayed literally as \"undefined\".",
+    "Fixed a one-time transfer not posting its paid status immediately, even though the balance moved right away \\u2014 it stayed swipeable as \"unpaid\", and swiping it would move the money a second time. It's now marked paid at creation, matching the balance change.",
+    "Overview's balance chart, the Calendar month grid, and the Remaining Budget card now sit on the same ring-glow hero card as Net Worth/Portfolio.",
+    "Efficiency Score card now shows on the Pie and Rings budget chart styles too, not just Bars. Remaining Budget also now appears on Rings.",
+    "Fixed the Efficiency Score unfairly rewarding categories with a bill due later this month (e.g. a mortgage not yet posted) that was fully paid last month \\u2014 it read as a big \"saving\" when really it just wasn't due yet. Now compares both months through the same day-of-month.",
+    "Fixed Daily Limit advice ignoring bills still scheduled later this month \\u2014 it divided (target minus what's already been paid) by days left, so an unpaid rent or mortgage due later looked like free daily spending money. It now reserves scheduled-but-unpaid bills first.",
+    "Fixed Import never finding your exports on Android: Export saves to the app's Cache folder (Directory.Documents needs storage permissions this app doesn't request), but Import was still only looking in Documents \\u2014 a mismatch left over from before that Cache workaround existed. Import now looks in the same place Export actually writes."
   ]
 }
