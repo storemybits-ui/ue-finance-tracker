@@ -58,7 +58,7 @@ body.okuyasu #bg-blobs{background:linear-gradient(315deg,rgba(74,46,143,0.22) 0%
   } catch(e){}
 })();
 </script>
-<title>finance-tracker v59.1</title>
+<title>finance-tracker v59.2</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-serif}
@@ -421,10 +421,15 @@ body.dark select option{background:#13161F}
 <div id="bg-blobs"></div>
 <div id="root"></div>
 <script>
-var APP_VERSION="59.1";
+var APP_VERSION="59.2";
 /* ── Changelog: shown after an update installs. Keyed by app version. ──────────
    Add a new entry each release with short, user-facing bullet points. ────────── */
 var CHANGELOG = {
+  "59.2": [
+    "Portfolio Value (Shares tab) now totals every holding, full stop \u2014 it no longer hides holdings you've excluded from Net Worth. Net Worth keeps respecting each item's include/exclude checkbox. Added a tap-for-info icon on both totals explaining the difference.",
+    "Fixed share holdings silently counting as $0 toward Net Worth everywhere \u2014 the Net Worth total, the combined multi-profile total, cloud sync's snapshot total, the Shares section subtotal, and the sort order all read a field shares never populate. They now use each share's real qty \u00d7 price.",
+    "Balance's roll-up number animation (Overview hero) now also plays for the Net Worth total and for each profile's balance in the Combined Profiles screen \u2014 previously only Balance animated when its value changed."
+  ],
   "59.1": [
     "Fixed a hardware-back double-fire: two independent back-press systems could both handle a single swipe, so closing What's New or the Help section could take Settings all the way down with it. Now only the first responder acts.",
     "Transfers between accounts: a single transfer now shows as ONE row (\"Account \u2192 Account\") instead of two \u2014 a long-standing bug meant the calendar showed a separate outflow and inflow entry per transfer, and the inflow leg had never been given a name, so it displayed literally as \"undefined\".",
@@ -2511,7 +2516,7 @@ var RestorePoints=(function(){
     var bal=(p.accounts||[]).reduce(function(s,a){return s+(parseFloat(a.balance)||0);},0);
     var assetSum=(p.assets||[]).reduce(function(s,a){
       if(a.excludeFromNetWorth)return s;
-      return s+((parseFloat(a.value)||0)-(parseFloat(a.debtOwing)||0));
+      return s+(assetValue(a)-(parseFloat(a.debtOwing)||0));
     },0);
     return bal+assetSum;
   }
@@ -3521,12 +3526,19 @@ var state={
 
 /* ─── Account helpers ─── */
 function totalBalance(){return state.accounts.reduce(function(s,a){return s+a.balance;},0);}
+/* v59.2: shares never populate the generic .value field (their worth comes
+   from shareQty*sharePrice via shareValue() instead), so every net-worth
+   total that read a.value directly was silently treating every share
+   holding as worth $0. assetValue(a) is the one place that decision lives
+   now — every net-worth-style total below calls this instead of reading
+   a.value directly. */
+function assetValue(a){ return a.isShare?shareValue(a):(parseFloat(a.value)||0); }
 /* totalNetWorth: balance + sum of all asset equity (value - debtOwing) */
 function totalNetWorth(){
   var bal=totalBalance();
   var assetSum=(state.assets||[]).reduce(function(s,a){
     if(a.excludeFromNetWorth)return s;
-    var v=parseFloat(a.value)||0;
+    var v=assetValue(a);
     var d=parseFloat(a.debtOwing)||0;
     return s+(v-d);
   },0);
@@ -3545,7 +3557,7 @@ function profileNetWorth(profileId){
   var bal=(accts||[]).reduce(function(s,a){return s+(parseFloat(a.balance)||0);},0);
   var assetSum=(assets||[]).reduce(function(s,a){
     if(a.excludeFromNetWorth)return s;
-    return s+((parseFloat(a.value)||0)-(parseFloat(a.debtOwing)||0));
+    return s+(assetValue(a)-(parseFloat(a.debtOwing)||0));
   },0);
   return bal+assetSum;
 }
@@ -9118,7 +9130,7 @@ function computeNwSections(items){
   function _netOf(a){return (parseFloat(a.value)||0)-(parseFloat(a.debtOwing)||0);}
   return [
     {key:'shares', label:'Shares', items:items.filter(function(a){return !a.isDebt&&a.isShare;}),
-     sub:function(l){return l.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:(parseFloat(a.value)||0));},0);}},
+     sub:function(l){return l.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:assetValue(a));},0);}},
     {key:'secured',label:'Property & Loans', items:items.filter(function(a){return !a.isDebt&&!a.isShare&&(a.isMortgage||a.isLoan);}),
      sub:function(l){return l.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:_netOf(a));},0);}},
     {key:'assets', label:'Assets', items:items.filter(function(a){return !a.isDebt&&!a.isShare&&!a.isMortgage&&!a.isLoan;}),
@@ -9152,6 +9164,14 @@ function nwCheck(a){
   var ac=accent(),at=accentText();
   var inc=!a.excludeFromNetWorth;
   return '<button onclick="event.stopPropagation();toggleAssetInNetWorth('+a.id+')" title="'+(inc?'Counted in net worth — tap to exclude':'Excluded from net worth — tap to include')+'" style="'+S({width:'22px',height:'22px',borderRadius:'6px',border:'2px solid '+(inc?ac:'var(--border)'),background:inc?ac:'transparent',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,padding:'0'})+'">'+(inc?icS('check',at,13):'')+'</button>';
+}
+/* v59.2: small tappable info icon for hero-card headers — shows a themed,
+   auto-dismissing toast via showSimpleToast rather than a hover tooltip,
+   since touch devices have no hover. Used to explain the Portfolio Value /
+   Net Worth distinction (see the two call sites). */
+function _nwInfoIcon(msg){
+  var esc=msg.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  return '<span onclick="event.stopPropagation();showSimpleToast(\''+esc+'\')" role="button" aria-label="More info" style="display:inline-flex;align-items:center;justify-content:center;cursor:pointer;opacity:.55;flex-shrink:0">'+icS('info','currentColor',12)+'</span>';
 }
 function renderAssetRow(a,returnTo){
   var ac=accent(),rdFg=typeRedFg();
@@ -9509,19 +9529,21 @@ function renderPortfolioTab(){
 
     var refreshing=!!state._sharesRefreshing;
 
-    /* Hero total — a real sum of shareValue(a) over every holding, mirroring
-       exactly how totalNetWorth()/the Net Worth "Shares" section total their
-       value (same a.value convention, same lack of cross-currency conversion —
-       this app doesn't convert between currencies anywhere, so a USD holding's
-       number is summed alongside AUD ones just as it already is in Net Worth). */
-    var totalValue=holdings.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:shareValue(a));},0);
+    /* v59.2: Portfolio Value is a total of EVERY holding, full stop — it no
+       longer mirrors the Net Worth "Shares" section's exclusions. The two
+       numbers now answer different questions: Portfolio Value is "what are
+       my holdings worth", Net Worth is "what counts toward my net worth"
+       (each holding's checkbox, tapped via nwCheck, decides that). See the
+       info tooltip on this card and on the Net Worth total for the exact
+       wording shown to the user. */
+    var totalValue=holdings.reduce(function(s,a){return s+shareValue(a);},0);
 
     /* Today's change — value-weighted average of each holding's REAL
        regularMarketChangePercent (only holdings that have actually been
        refreshed contribute). Dollar change is the real per-holding
        shareChangeAmt × quantity, summed. Never fabricated: if nothing has
        been refreshed yet, haveChangeData is false and the UI says so. */
-    var withChange=holdings.filter(function(a){return !a.excludeFromNetWorth&&a.shareChangePct!=null&&isFinite(a.shareChangePct);});
+    var withChange=holdings.filter(function(a){return a.shareChangePct!=null&&isFinite(a.shareChangePct);});
     var haveChangeData=withChange.length>0;
     var totalChangeValue=0,weightedPctSum=0,weightW=0;
     withChange.forEach(function(a){
@@ -9564,6 +9586,7 @@ function renderPortfolioTab(){
       '<div style="padding:16px 20px">'+
         '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">'+
           '<span style="flex:1;font-size:10px;color:'+ac+';font-weight:600;text-transform:uppercase;letter-spacing:.06em;opacity:.8">Total Portfolio Value</span>'+
+          _nwInfoIcon("Portfolio Value totals every holding. Net Worth only counts what you\'ve selected below \u2014 tap an item\'s checkmark to include or exclude it.")+
           refreshBtn+
         '</div>'+
         '<div class="'+(refreshing?'shimmer':'')+'" style="font-size:28px;font-weight:800;color:'+ac+';font-family:monospace;line-height:1.1">'+fmt(totalValue)+'</div>'+
@@ -11070,7 +11093,7 @@ function renderNwProfilesConfigModal(){
   var head=
     '<div style="background:'+td("accent")+';border:1px solid '+ac+'22;border-radius:14px;padding:12px 14px;margin-bottom:12px">'+
       '<div style="font-size:10px;color:'+ac+';font-weight:600;text-transform:uppercase;letter-spacing:.06em;opacity:.8;margin-bottom:2px">Combined Net Worth</div>'+
-      '<div style="font-size:24px;font-weight:800;color:'+cTotColor+';font-family:monospace;line-height:1.1">'+fmt(_cni.total)+'</div>'+
+      '<div id="nw-combined-total" data-count="'+_cni.total+'" style="font-size:24px;font-weight:800;color:'+cTotColor+';font-family:monospace;line-height:1.1">'+fmt(_cni.total)+'</div>'+
       '<div style="font-size:10px;color:var(--muted);margin-top:3px">'+_cni.includedCount+' of '+_cni.profileCount+' profiles included</div>'+
     '</div>'+
     '<div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.4">Tap a profile to include or exclude it from the combined total. Excluded profiles keep their own net worth — they just aren\u2019t counted here.</div>';
@@ -11085,7 +11108,7 @@ function renderNwProfilesConfigModal(){
         '<span style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</span>'+
         (isCur?'<span style="font-size:9px;font-weight:700;color:'+ac+';padding:1px 6px;border:1px solid '+ac+'55;border-radius:5px;text-transform:uppercase;letter-spacing:.04em">Current</span>':'')+
       '</span>'+
-      '<span style="font-size:14px;font-weight:700;font-family:monospace;color:'+(on?(r.nw>=0?'var(--text)':rdFg):'var(--muted)')+'">'+fmt(r.nw)+'</span>'+
+      '<span id="nw-profile-'+r.id+'" data-count="'+r.nw+'" style="font-size:14px;font-weight:700;font-family:monospace;color:'+(on?(r.nw>=0?'var(--text)':rdFg):'var(--muted)')+'">'+fmt(r.nw)+'</span>'+
     '</button>';
   }).join('');
   var backBtn='<button onclick="closeModal()" style="'+S({width:'100%',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:'12px',padding:'12px',color:'var(--sub)',fontWeight:600,fontSize:'13px',cursor:'pointer',fontFamily:'inherit',marginTop:'4px',display:'flex',alignItems:'center',justifyContent:'center',gap:'6px'})+'">'+ic('back','var(--sub)',14)+' Back to Net Worth</button>';
@@ -12108,7 +12131,7 @@ function renderModal(){
     var nwItems=state.assets||[];
     var assetItems=nwItems.filter(function(a){return !a.isDebt;});
     var debtItems=nwItems.filter(function(a){return a.isDebt;});
-    var assetSum=assetItems.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:(parseFloat(a.value)||0));},0);
+    var assetSum=assetItems.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:assetValue(a));},0);
     /* assetDebt: mortgage-style debt attached to an asset (e.g. house with mortgage) */
     var assetDebt=assetItems.reduce(function(s,a){return s+(a.excludeFromNetWorth?0:(parseFloat(a.debtOwing)||0));},0);
     /* standaloneDebt: pure debts (credit card, car loan with no real asset) */
@@ -12183,16 +12206,17 @@ function renderModal(){
       '<div style="padding:16px 20px">'+
         '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">'+
           '<span style="flex:1;font-size:10px;color:'+ac_nw+';font-weight:600;text-transform:uppercase;letter-spacing:.06em;opacity:.8">'+nwOwnLabel+'</span>'+
+          _nwInfoIcon("Net Worth only counts items you\'ve selected below \u2014 tap an item\'s checkmark to include or exclude it. Portfolio Value (in Shares) always totals everything you hold.")+
           nwCogBtn+
         '</div>'+
-        '<div style="font-size:28px;font-weight:800;color:'+nwColor+';font-family:monospace;line-height:1.1">'+fmt(nwTotal)+'</div>'+
+        '<div id="nw-total" data-count="'+nwTotal+'" style="font-size:28px;font-weight:800;color:'+nwColor+';font-family:monospace;line-height:1.1">'+fmt(nwTotal)+'</div>'+
         compBar+compLegend+
       '</div>'
     );
 
     /* ── Sort control (combined Assets + Debts list) ── */
     var nwSort=state.nwSort||'value_desc';
-    function nwSortVal(a){return (parseFloat(a.value)||0)-(parseFloat(a.debtOwing)||0);}
+    function nwSortVal(a){return assetValue(a)-(parseFloat(a.debtOwing)||0);}
     function nwTypeRank(a){return a.isShare?0:(a.isMortgage||a.isLoan)?1:a.isDebt?3:2;}
     function nwSortList(arr){
       return arr.slice().sort(function(x,y){
@@ -12592,6 +12616,11 @@ function patchModal(){
     if(existing)existing.outerHTML=html;
     else{var root=document.getElementById('root');if(root){var d=document.createElement('div');d.innerHTML=html;if(d.firstChild){d.firstChild.id='_stOverlay';root.appendChild(d.firstChild);}}}
   }
+  /* v59.2: Net Worth / profile totals can change from actions taken INSIDE
+     an open modal (ticking a holding's include-checkbox, switching profiles,
+     adding a share) — those update via patchModal, not a full render, so the
+     count-up needs its own hook here too. */
+  _animateAllCountEls();
 }
 
 /* ─── Profile Management ─────────────────────────────────────────────────────
@@ -15981,39 +16010,61 @@ function render(){
   });
 
   _lastTab = state.tab;
-  _animateHdrNW();
+  _animateAllCountEls();
 }
 
-/* ─── Net worth count-up ──────────────────────────────────────────────────────
-   One-shot roll animation on the hero Balance figure whenever its value
-   changes between renders (first paint included). Pure rAF + textContent —
-   no re-render, no layout thrash. Skipped under OS Reduce Motion. */
-var _nwAnimLast=null,_nwAnimRaf=null;
-function _animateHdrNW(){
-  var el=document.getElementById('hdr-nw');
+/* ─── Count-up animation ──────────────────────────────────────────────────────
+   One-shot roll animation on any money figure whenever its value changes
+   between renders (first paint included). Pure rAF + textContent — no
+   re-render, no layout thrash. Skipped under OS Reduce Motion.
+   v59.2: generalized from a single hardcoded element (_animateHdrNW, the
+   Overview hero's Balance figure) into a keyed registry so Net Worth and
+   per-profile balance figures can each animate independently. Any element
+   with id="X" and data-count="<target number>" is picked up automatically
+   by calling _animateCountEls(['X', ...]) after a render/patch. */
+var _countAnimState={};
+function _animateCountEl(id){
+  var el=document.getElementById(id);
   if(!el)return;
-  var target=parseFloat(el.getAttribute('data-nw'));
+  var target=parseFloat(el.getAttribute('data-count'));
   if(isNaN(target))return;
-  var from=_nwAnimLast;
-  _nwAnimLast=target;
+  var st=_countAnimState[id]||(_countAnimState[id]={last:null,raf:null});
+  var from=st.last;
+  st.last=target;
   if(from===null||from===target)return;
   var reduce=false;
   try{reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
   if(reduce)return;
-  if(_nwAnimRaf)cancelAnimationFrame(_nwAnimRaf);
+  if(st.raf)cancelAnimationFrame(st.raf);
   var start=null,dur=550;
   function step(ts){
     /* Element is replaced on every render — re-query so we never write to a detached node */
-    var cur=document.getElementById('hdr-nw');
-    if(!cur){_nwAnimRaf=null;return;}
+    var cur=document.getElementById(id);
+    if(!cur){st.raf=null;return;}
     if(start===null)start=ts;
     var t=Math.min(1,(ts-start)/dur);
     var eased=1-Math.pow(1-t,3); /* ease-out cubic */
     cur.textContent=fmt(from+(target-from)*eased);
-    if(t<1){_nwAnimRaf=requestAnimationFrame(step);}
-    else{cur.textContent=fmt(target);_nwAnimRaf=null;}
+    if(t<1){st.raf=requestAnimationFrame(step);}
+    else{cur.textContent=fmt(target);st.raf=null;}
   }
-  _nwAnimRaf=requestAnimationFrame(step);
+  st.raf=requestAnimationFrame(step);
+}
+/* Call after any render/patch that might have touched these elements — a
+   missing element (not currently on screen) is a harmless no-op above. */
+function _animateCountEls(ids){ids.forEach(_animateCountEl);}
+/* Known count-up target ids, checked after every render() and patchModal():
+   hdr-nw (Overview hero Balance), nw-total (Net Worth modal total),
+   nw-combined-total (Combined Profiles total), and nw-profile-<id> (each
+   profile's own net worth row in that same screen). The profile ids aren't
+   known statically, so those are re-collected from state.assets... no —
+   from ProfileManager — each time, matching whatever's actually in the DOM. */
+function _animateAllCountEls(){
+  var ids=['hdr-nw','nw-total','nw-combined-total'];
+  try{
+    (ProfileManager.getProfiles()||[]).forEach(function(p){ids.push('nw-profile-'+p.id);});
+  }catch(e){}
+  _animateCountEls(ids);
 }
 
 window.switchToFullEdit=function(){
