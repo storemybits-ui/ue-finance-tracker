@@ -1,9 +1,7 @@
 {
-    "version":  "58.0",
-    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v58.0.zip",
+    "version":  "58.4",
+    "url":  "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v58.4.zip",
     "notes":  [
-                  "Default categories overhauled: the old 8-bucket list (Housing, Utilities, Health, Transport, Entertainment, Food, Subscriptions, Other) is replaced by a 100-category taxonomy across 12 fiscal groups (Housing \u0026 Utilities, Food \u0026 Dining, Transportation, Health \u0026 Wellness, Personal Care, Shopping \u0026 Lifestyle, Entertainment \u0026 Leisure, Travel, Education, Financial \u0026 Legal, Family \u0026 Pets, Business \u0026 Work). Your existing bills, expenses, budgets and scheduled overrides are automatically remapped to the closest new category — nothing needs re-tagging.",
-                  "The category picker now groups categories under their fiscal group with a search box up top, so finding one in the larger list stays quick.",
-                  "New Settings \u003e Custom Categories toggle: \"Category icon colour\" — Gold renders every default and custom category icon in one gold tone; By group keeps each fiscal group\u0027s own colour (used in charts and budget bars). Five new icons (Flame, Truck, Shirt, Shoe, Legal scale) were added to the shared icon library to cover the new categories, and are also selectable for custom categories."
+                  "New \"Luxe\" layout for the Transactions tab: a trial row style with a circular category icon, merchant name, category (and time when set) as a subtitle, and the account name under the amount. Toggle it on/off with the new layout button beside History — your choice is remembered."
               ]
 }
