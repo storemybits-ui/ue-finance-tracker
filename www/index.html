@@ -59,7 +59,7 @@ body.okuyasu #bg-blobs{background:linear-gradient(315deg,rgba(74,46,143,0.22) 0%
   } catch(e){}
 })();
 </script>
-<title>finance-tracker v60.2</title>
+<title>finance-tracker v60.3</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-serif}
@@ -443,10 +443,15 @@ body.dark select option{background:#13161F}
 <div id="bg-blobs"></div>
 <div id="root"></div>
 <script>
-var APP_VERSION="60.2";
+var APP_VERSION="60.3";
 /* ── Changelog: shown after an update installs. Keyed by app version. ──────────
    Add a new entry each release with short, user-facing bullet points. ────────── */
 var CHANGELOG = {
+  "60.3": [
+    "New Format fixes to match the approved mockup exactly: top tab bar now sits above the month selector (was below it); transaction row sizing, spacing and the amount's monospace font now match precisely; date-group headers (\"Tomorrow \u00b7 Thu, Jul 23\") are bigger and bolder instead of small and grey.",
+    "Overview now shows a \"Recent activity\" heading with a View all link when New Format is on, matching the mockup \u2014 View all opens Calendar, which is where the day-by-day transaction list actually lives (the old standalone Transactions tab was retired in an earlier version; this changelog previously said New Format covered it, which was inaccurate since that screen is no longer reachable).",
+    "New Format now also applies to Calendar's day-detail transaction list and search results list, not just Overview/Upcoming/Recurring \u2014 these are the actual reachable transaction lists in the app."
+  ],
   "60.2": [
     "Added New Format \u2014 a full alternate look for the app, toggled from Settings (or the small layout icon on the Transactions tab): circular neutral avatars instead of colour-coded category tiles, hairline dividers instead of boxed rows, and an account label under each amount, applied to Overview, Upcoming, Recurring (Income/Bills/Expenses/Transfers), and Transactions.",
     "New Format also moves primary navigation from the bottom bar to a top tab strip, with the quick-add button always in the bottom-right corner instead of embedded in the nav bar.",
@@ -6161,7 +6166,9 @@ function _calSearchResultsHtml(csOverride){
     var hasPaidF=gi.some(function(tx){return !tx.unpaid;});
     var gHdr=dateGroupHdr(gLbl,gNet,{hasRecur:hasRecurF,hasAuto:hasAutoF,hasPaid:hasPaidF});
     var gRows=gi.map(function(tx){
-      var inner=txRow({label:tx.lbl,type:tx.type,cat:tx.cat,amount:tx.type==='income'?tx.amt:-tx.amt,unpaid:!!tx.unpaid});
+      var _luxeSr=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
+      var _rOptsSr={label:tx.lbl,type:tx.type,cat:tx.cat,amount:tx.type==='income'?tx.amt:-tx.amt,unpaid:!!tx.unpaid,accountId:tx.item&&tx.item.accountId,dt:tx.dt};
+      var inner=_luxeSr?txRowLuxe(_rOptsSr):txRow(_rOptsSr);
       return swipeRow(tx.item.id,inner,tx.type,tx.ds);
     }).join('');
     return '<div class="date-group" style="background:var(--card-grad);border:1px solid transparent;border-radius:12px;margin-bottom:4px;overflow:hidden">'+gHdr+gRows+'</div>';
@@ -8909,13 +8916,14 @@ function renderHeader(){
       '</div>'+
     '</div>'+
     accBar+
+    /* v60.3: top-nav mode (uiPrefs.txLayout==='luxe') puts the tab strip here,
+       ABOVE the month bar (per feedback), still inside #hdr so the existing
+       header-height auto-measurement in render() picks up its height for
+       free — no separate layout math needed. */
+    (!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe')?renderTopTabs():'')+
     /* Month bar pins with the header on every tab (hidden on Recurring).
        Stats + hero chart moved into the scrollable Overview content (v54.3). */
     renderMonthBar()+
-    /* v60.2: top-nav mode (uiPrefs.txLayout==='luxe') appends the tab strip
-       here, inside #hdr, so the existing header-height auto-measurement in
-       render() picks it up for free — no separate height math needed. */
-    (!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe')?renderTopTabs():'')+
   '</div>';
 }
 
@@ -10134,7 +10142,9 @@ function renderCalendarFlow(){
       dd.events.map(function(e){
         var paid=isPaid(e.type,e.id,selDate.toDateString());
         var src=(e.type==="income"?state.income:e.type==="bill"?state.bills:state.expenses||[]).find(function(x){return x.id===e.id;})||{};
-        var inner=txRow({label:e.name,type:e.type,cat:e.category,amount:e.amount,displayAmount:e._displayAmount,isRecurring:src.freqUnit&&src.freqUnit!=='once',autopay:src.autopay,paid:paid,freq:(src.freqUnit&&src.freqUnit!=='once')?freqAbbr(src):''});
+        var _luxeCal=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
+        var _rOptsCal={label:e.name,type:e.type,cat:e.category,amount:e.amount,accountId:src.accountId,dueTime:src.dueTime,dt:selDate,isRecurring:src.freqUnit&&src.freqUnit!=='once',autopay:src.autopay,paid:paid,freq:(src.freqUnit&&src.freqUnit!=='once')?freqAbbr(src):''};
+        var inner=_luxeCal?txRowLuxe(_rOptsCal):txRow(_rOptsCal);
         return swipeRow(e.id,inner,e.type,selDate.toDateString());
       }).join('');
     detail='<div style="margin-top:11px">'+
@@ -10216,7 +10226,9 @@ function renderCalendarFlow(){
       var gHdr=dateGroupHdr(gLbl,gNet,{hasRecur:hasRecurCal,hasAuto:hasAutoCal,hasPaid:hasPaidCal});
       var gRows=gi.map(function(e){
         var src=(e.type==="income"?state.income:e.type==="bill"?state.bills:state.expenses).find(function(x){return x.id===e.id;})||{};
-        var inner=txRow({label:e.name,type:e.type,cat:e.category,amount:e.amount,displayAmount:e._displayAmount});
+        var _luxeCal2=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
+        var _rOptsCal2={label:e.name,type:e.type,cat:e.category,amount:e.amount,accountId:src.accountId,dueTime:src.dueTime,dt:new Date(e.dateStr),isRecurring:src.freqUnit&&src.freqUnit!=='once',autopay:src.autopay,freq:(src.freqUnit&&src.freqUnit!=='once')?freqAbbr(src):''};
+        var inner=_luxeCal2?txRowLuxe(_rOptsCal2):txRow(_rOptsCal2);
         return swipeRow(e.id,inner,e.type,e.dateStr);
       }).join('');
       return '<div class="date-group" style="background:var(--card-grad);border:1px solid transparent;border-radius:12px;margin-bottom:4px;overflow:hidden">'+gHdr+gRows+'</div>';
@@ -10228,7 +10240,16 @@ function renderCalendarFlow(){
 }
 
 function renderOverview(){
-  return renderOverviewHeroBlock()+renderUpcoming();
+  /* v60.3: New Format adds a "Recent activity / View all" header above the
+     list, matching the approved mockup — View all jumps to the full
+     Transactions tab. Standard format is unchanged (no header here; the
+     date-grouped list starts straight after the hero, as before). */
+  var _luxeOv=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
+  var luxeHdr=_luxeOv?'<div style="display:flex;justify-content:space-between;align-items:baseline;margin:18px 2px 8px">'+
+    '<span style="font-size:15px;font-weight:650;letter-spacing:-.01em;color:var(--text)">Recent activity</span>'+
+    '<span onclick="setTab(\'calendar\')" style="font-size:11px;font-weight:600;color:'+accent()+';cursor:pointer">View all</span>'+
+  '</div>':'';
+  return renderOverviewHeroBlock()+luxeHdr+renderUpcoming();
 }
 
 /* ─── Standalone Upcoming tab ─── */
@@ -10938,15 +10959,15 @@ function renderTransfersTab(){
     var inner;
     if(txLuxeXfer){
       var xferSubtitle=(fromAcc?fromAcc.name:'?')+' \u2192 '+(toAcc?toAcc.name:'?')+' \u2022 '+fLabel+(dateDisp?' \u00b7 '+dateDisp:'');
-      inner='<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:var(--card-grad)">'+
-        '<div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1">'+
-          '<div style="position:relative;width:44px;height:44px;border-radius:999px;background:var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('exchange','var(--sub)',20)+recurIconBadge(isRecurring,freqAbbr(tx))+'</div>'+
+      inner='<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;background:var(--card-grad)">'+
+        '<div style="display:flex;align-items:center;gap:14px;min-width:0;flex:1">'+
+          '<div style="position:relative;width:42px;height:42px;border-radius:999px;background:var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('exchange','var(--sub)',19)+recurIconBadge(isRecurring,freqAbbr(tx))+'</div>'+
           '<div style="min-width:0">'+
-            '<div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+label+'</div>'+
-            '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">'+xferSubtitle+'</div>'+
+            '<div style="font-size:14.5px;font-weight:600;letter-spacing:-.005em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+label+'</div>'+
+            '<div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">'+xferSubtitle+'</div>'+
           '</div>'+
         '</div>'+
-        '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+transferMk+'<span style="font-size:14px;font-weight:700;color:var(--text);font-family:monospace">'+fmt(tx.amount)+'</span></div>'+
+        '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+transferMk+'<span style="font-size:14.5px;font-weight:650;font-variant-numeric:tabular-nums;color:var(--text);font-family:\'SF Mono\',ui-monospace,monospace">'+fmt(tx.amount)+'</span></div>'+
       '</div>';
     } else {
     inner='<div style="'+S({display:"flex",alignItems:"center",gap:"10px",padding:"12px 13px",background:"var(--card)"})+'">'+
@@ -11705,6 +11726,14 @@ function catChip(ci){
  * labelColor — optional CSS color string for the label.
  */
 function dateGroupHdr(label,net,flags,labelColor){
+  var _luxe=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
+  if(_luxe){
+    var netStrL=net!==undefined?'<span style="font-size:11px;font-weight:500;color:var(--muted);font-family:\'SF Mono\',ui-monospace,monospace">'+(net>=0?'+':'')+fmt(net)+'</span>':'';
+    return '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:14px 18px 6px">'+
+      '<span style="font-size:15px;font-weight:650;letter-spacing:-.01em;color:'+(labelColor||'var(--text)')+'">'+label+'</span>'+
+      netStrL+
+    '</div>';
+  }
   var netStr=net!==undefined?'<span style="font-size:9px;font-weight:500;color:var(--muted);opacity:.55;font-family:monospace">'+(net>=0?'+':'')+fmt(net)+'</span>':'';
   return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 12px;background:var(--surface)">'+
     '<span style="font-size:11px;font-weight:600;color:'+(labelColor||'var(--muted)')+'">'+label+'</span>'+
@@ -11781,7 +11810,7 @@ function txRowLuxe(opts){
   var amtStr=amt>=0?('+'+fmt(amt)):('-'+fmt(Math.abs(amt)));
   var amtColor=amt>=0?ac:'var(--text)';
   var iconKey=isTransferRow?'transfers':(type==='income'?(ci.key!=='other'&&!isUncat?ci.icon:'income'):(isUncat?(type==='bill'?'bills':'expenses'):ci.icon));
-  var avatar='<div style="position:relative;width:44px;height:44px;border-radius:999px;background:var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(iconKey,'var(--sub)',20)+recurIconBadge(opts.hideRecur?false:opts.isRecurring,opts.freq)+'</div>';
+  var avatar='<div style="position:relative;width:42px;height:42px;border-radius:999px;background:var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(iconKey,'var(--sub)',19)+recurIconBadge(opts.hideRecur?false:opts.isRecurring,opts.freq)+'</div>';
   var timeStr='';
   if(opts.dueTime&&opts.dueTime!=='00:00'&&opts.dt){
     var tParts=(''+opts.dueTime).split(':');
@@ -11793,18 +11822,18 @@ function txRowLuxe(opts){
   var subtitle=catLabel+(timeStr?' • '+timeStr:'');
   var acct=opts.accountId!==undefined?getAccount(opts.accountId):null;
   var acctStr=acct?acct.name:'';
-  var inner='<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:var(--card-grad);border-top:1px solid var(--border)"'+(opts.onclick&&!opts.onclickWrap?' onclick="'+opts.onclick+'"':'')+'>'+
-    '<div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1">'+
+  var inner='<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;background:var(--card-grad);border-top:1px solid var(--border)"'+(opts.onclick&&!opts.onclickWrap?' onclick="'+opts.onclick+'"':'')+'>'+
+    '<div style="display:flex;align-items:center;gap:14px;min-width:0;flex:1">'+
       avatar+
       '<div style="min-width:0">'+
-        '<div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+opts.label+'</div>'+
-        '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">'+subtitle+'</div>'+
+        '<div style="font-size:14.5px;font-weight:600;letter-spacing:-.005em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+opts.label+'</div>'+
+        '<div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">'+subtitle+'</div>'+
       '</div>'+
     '</div>'+
-    '<div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;gap:2px">'+
-      '<div style="display:flex;align-items:center;gap:6px">'+statusMarkers(opts)+'<span style="font-size:14px;font-weight:700;color:'+amtColor+';font-family:monospace">'+amtStr+'</span></div>'+
-      (acctStr?'<span style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">'+escHtml(acctStr)+'</span>':
-        (opts.balAfter!==undefined?'<span style="font-size:9px;color:'+(opts.balAfter<0?rdFg:'var(--muted)')+';font-family:monospace">bal '+fmt(opts.balAfter)+'</span>':''))+
+    '<div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;gap:3px">'+
+      '<div style="display:flex;align-items:center;gap:6px">'+statusMarkers(opts)+'<span style="font-size:14.5px;font-weight:650;font-variant-numeric:tabular-nums;color:'+amtColor+';font-family:\'SF Mono\',ui-monospace,monospace">'+amtStr+'</span></div>'+
+      (acctStr?'<span style="font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">'+escHtml(acctStr)+'</span>':
+        (opts.balAfter!==undefined?'<span style="font-size:9.5px;color:'+(opts.balAfter<0?rdFg:'var(--muted)')+';font-family:\'SF Mono\',ui-monospace,monospace">bal '+fmt(opts.balAfter)+'</span>':''))+
     '</div>'+
   '</div>';
   return inner;

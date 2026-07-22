@@ -1,9 +1,9 @@
 {
-  "version": "60.2",
-  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v60.2.zip",
+  "version": "60.3",
+  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v60.3.zip",
   "notes": [
-    "Added New Format \\u2014 a full alternate look for the app, toggled from Settings (or the small layout icon on the Transactions tab): circular neutral avatars instead of colour-coded category tiles, hairline dividers instead of boxed rows, and an account label under each amount, applied to Overview, Upcoming, Recurring (Income/Bills/Expenses/Transfers), and Transactions.",
-    "New Format also moves primary navigation from the bottom bar to a top tab strip, with the quick-add button always in the bottom-right corner instead of embedded in the nav bar.",
-    "Portfolio holdings keep their existing card layout in both formats for now \\u2014 they carry price/refresh/market details a simple transaction row can't show without losing functionality."
+    "New Format fixes to match the approved mockup exactly: top tab bar now sits above the month selector (was below it); transaction row sizing, spacing and the amount's monospace font now match precisely; date-group headers (\"Tomorrow \\u00b7 Thu, Jul 23\") are bigger and bolder instead of small and grey.",
+    "Overview now shows a \"Recent activity\" heading with a View all link when New Format is on, matching the mockup \\u2014 View all opens Calendar, which is where the day-by-day transaction list actually lives (the old standalone Transactions tab was retired in an earlier version; this changelog previously said New Format covered it, which was inaccurate since that screen is no longer reachable).",
+    "New Format now also applies to Calendar's day-detail transaction list and search results list, not just Overview/Upcoming/Recurring \\u2014 these are the actual reachable transaction lists in the app."
   ]
 }
