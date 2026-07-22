@@ -59,7 +59,7 @@ body.okuyasu #bg-blobs{background:linear-gradient(315deg,rgba(74,46,143,0.22) 0%
   } catch(e){}
 })();
 </script>
-<title>finance-tracker v60.3</title>
+<title>finance-tracker v60.51</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-serif}
@@ -443,10 +443,20 @@ body.dark select option{background:#13161F}
 <div id="bg-blobs"></div>
 <div id="root"></div>
 <script>
-var APP_VERSION="60.3";
+var APP_VERSION="60.51";
 /* ── Changelog: shown after an update installs. Keyed by app version. ──────────
    Add a new entry each release with short, user-facing bullet points. ────────── */
 var CHANGELOG = {
+  "60.51": [
+    "New Format transaction names further softened (weight 560 \u2192 500) \u2014 still bolder than the subtitle for hierarchy, but no longer stark."
+  ],
+  "60.5": [
+    "Reduced boldness and muted the accent colours in New Format / Mercury: row titles, amounts, account labels and \"Recent activity\"/date headers are lighter weight; Mercury's green/blue/orange/red accents are slightly desaturated so they sit more quietly against the rest of the theme instead of popping starkly."
+  ],
+  "60.4": [
+    "New Format: removed the separate per-day header boxes (\"Tomorrow \u00b7 Thu, Jul 23\") with gaps between them \u2014 the date now folds into each row's subtitle (e.g. \"Housing \u2022 Tomorrow\") and every row sits in one continuous card with hairline dividers, matching the approved mockup exactly.",
+    "Applied to Overview, Upcoming, Calendar's month list, and Calendar's search results \u2014 the reachable transaction lists in the app."
+  ],
   "60.3": [
     "New Format fixes to match the approved mockup exactly: top tab bar now sits above the month selector (was below it); transaction row sizing, spacing and the amount's monospace font now match precisely; date-group headers (\"Tomorrow \u00b7 Thu, Jul 23\") are bigger and bolder instead of small and grey.",
     "Overview now shows a \"Recent activity\" heading with a View all link when New Format is on, matching the mockup \u2014 View all opens Calendar, which is where the day-by-day transaction list actually lives (the old standalone Transactions tab was retired in an earlier version; this changelog previously said New Format covered it, which was inaccurate since that screen is no longer reachable).",
@@ -1991,7 +2001,7 @@ function accent(){
   if(isEchoes())return'#20C8A8';
   if(isGoldenExperience())return'#C8D820';
   if(isKillerQueen())return'#E840A8';
-  if(isMercury())return'#1E8A4C';
+  if(isMercury())return'#318254';
   return isLight()?'#4A7A5C':P.accent;
 }
 function accentText(){
@@ -2022,7 +2032,7 @@ function typeBlueFg(){
   if(isEchoes())return'#40A8D8';
   if(isGoldenExperience())return'#60A8C0';
   if(isKillerQueen())return'#C868D8';
-  if(isMercury())return'#2E64CE';
+  if(isMercury())return'#3D66B5';
   return isLight()?'#6A5A8A':P.blue;
 }
 function typeOrangeFg(){
@@ -2038,7 +2048,7 @@ function typeOrangeFg(){
   if(isEchoes())return'#C09840';
   if(isGoldenExperience())return'#E0B820';
   if(isKillerQueen())return'#E86840';
-  if(isMercury())return'#C4622A';
+  if(isMercury())return'#AE643A';
   return isLight()?'#8A6040':P.orange;
 }
 function typeRedFg(){
@@ -2054,7 +2064,7 @@ function typeRedFg(){
   if(isEchoes())return'#C04068';
   if(isGoldenExperience())return'#C83020';
   if(isKillerQueen())return'#E840A8';
-  if(isMercury())return'#C0392E';
+  if(isMercury())return'#AB463D';
   return isLight()?'#9A5060':P.red;
 }
 /* td(k): returns the CSS variable string for a tinted background colour.
@@ -2104,7 +2114,7 @@ function balColor(b){
     if(b<t[2])return'#E840A8';if(b<t[1])return'#C05080';if(b<t[0])return'#904868';return'#E840A8';
   }
   if(isMercury()){
-    if(b<t[2])return typeRedFg();if(b<t[1])return'#C4622A';if(b<t[0])return'#B8952E';return'#1E8A4C';
+    if(b<t[2])return typeRedFg();if(b<t[1])return'#AE643A';if(b<t[0])return'#A88A44';return'#318254';
   }
   if(b<t[2])return isLight()?typeRedFg():P.red;
   if(b<t[1])return isLight()?'#8A6040':P.orange;
@@ -6151,6 +6161,14 @@ function _calSearchResultsHtml(csOverride){
     '<span style="color:var(--muted);font-weight:600">'+rows.length+' item'+(rows.length===1?'':'s')+'</span>'+
   '</div>';
   if(!rows.length)return head+'<div style="text-align:center;color:var(--muted);padding:26px 0;font-size:13px">No posted transactions match</div>';
+  var _luxeSearch=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
+  if(_luxeSearch){
+    var _flatRowsSr=rows.map(function(tx){
+      var _rOptsSr2={label:tx.lbl,type:tx.type,cat:tx.cat,amount:tx.type==='income'?tx.amt:-tx.amt,unpaid:!!tx.unpaid,accountId:tx.item&&tx.item.accountId,dt:tx.dt,dateLabel:relDayLabel(tx.dt)};
+      return swipeRow(tx.item.id,txRowLuxe(_rOptsSr2),tx.type,tx.ds);
+    }).join('');
+    return head+(_flatRowsSr?'<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.03)">'+_flatRowsSr+'</div>':'');
+  }
   var grp={},dks=[];
   rows.forEach(function(tx){var k=tx.dt.toDateString();if(!grp[k]){grp[k]=[];dks.push(k);}grp[k].push(tx);});
   var nowYr=today.getFullYear();
@@ -6166,9 +6184,7 @@ function _calSearchResultsHtml(csOverride){
     var hasPaidF=gi.some(function(tx){return !tx.unpaid;});
     var gHdr=dateGroupHdr(gLbl,gNet,{hasRecur:hasRecurF,hasAuto:hasAutoF,hasPaid:hasPaidF});
     var gRows=gi.map(function(tx){
-      var _luxeSr=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
-      var _rOptsSr={label:tx.lbl,type:tx.type,cat:tx.cat,amount:tx.type==='income'?tx.amt:-tx.amt,unpaid:!!tx.unpaid,accountId:tx.item&&tx.item.accountId,dt:tx.dt};
-      var inner=_luxeSr?txRowLuxe(_rOptsSr):txRow(_rOptsSr);
+      var inner=txRow({label:tx.lbl,type:tx.type,cat:tx.cat,amount:tx.type==='income'?tx.amt:-tx.amt,unpaid:!!tx.unpaid});
       return swipeRow(tx.item.id,inner,tx.type,tx.ds);
     }).join('');
     return '<div class="date-group" style="background:var(--card-grad);border:1px solid transparent;border-radius:12px;margin-bottom:4px;overflow:hidden">'+gHdr+gRows+'</div>';
@@ -9908,7 +9924,7 @@ function renderUpcoming(){
         label:ev.label,type:isTransfer?'transfer':ev.type,cat:isTransfer?'transfer':(ev.category||'other'),
         amount:ev.amount,isRecurring:_isRecur,freq:_src?freqAbbr(_src):'',
         autopay:(!isTransfer&&ev.autopay),accountId:ev.accountId,dueTime:ev.dueTime,dt:ev.date,
-        balAfter:ev.balance,note:ev.note
+        balAfter:ev.balance,note:ev.note,dateLabel:relDayLabel(ev.date)
       };
       return swipeRow(ev.id,txRowLuxe(_luxeOpts),ev.type,ds);
     }
@@ -10054,6 +10070,30 @@ function renderUpcoming(){
       '<div style="font-size:11px;font-weight:600;color:'+typeRedFg()+';opacity:.7;margin-bottom:6px;padding:0 2px">'+unpaidOverdue.length+' Overdue Unpaid</div>'+
       overdueGrouped+
     '</div>';
+  }
+
+  /* v60.4: New Format shows one continuous card (rows touching, hairline
+     dividers only — see txRowLuxe) with the date folded into each row's
+     subtitle via relDayLabel, instead of separate per-day header boxes with
+     gaps between them. Overdue and upcoming items are merged into a single
+     chronological list rather than two separately-boxed sections. */
+  if(txLuxe){
+    var _flatItems=[];
+    if(overdueItems.length){
+      var _unpaidOvd=overdueItems.filter(function(o){return !isPaid(o.type,o.item.id,o.dateStr);});
+      _unpaidOvd.forEach(function(o){
+        var ov=getInstOverride(o.type,o.item.id,o.dateStr);
+        var amt=(ov.amount!==undefined)?parseFloat(ov.amount):o.item.amount;
+        var lbl=(ov.name!==undefined)?ov.name:o.item.name;
+        var cat=(ov.category!==undefined)?ov.category:o.item.category;
+        _flatItems.push({date:o.date,label:lbl,amount:o.type==="income"?amt:-amt,type:o.type,id:o.item.id,autopay:o.item.autopay,category:cat,balance:totalBalance()});
+      });
+    }
+    _flatItems=_flatItems.concat(visibleEvents);
+    var _flatRows=_flatItems.map(function(ev){return makeEvRow(ev,false);}).join('');
+    var _flatCard=_flatRows?'<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.03)">'+_flatRows+'</div>':
+      '<div style="text-align:center;color:var(--muted);padding:36px 0;font-size:14px">No events in range</div>';
+    return dateBar+_flatCard;
   }
 
   return dateBar+
@@ -10213,7 +10253,23 @@ function renderCalendarFlow(){
       _iconBtn('openHistorySheet()','History','history')+
     '</div>'+
     (_fActive?'<div style="font-size:10px;color:var(--muted);margin-bottom:8px">'+escHtml(_calFilterSummary())+'</div>':'')+
-    (_fActive?_calSearchResultsHtml():dkCal.map(function(dk){
+    (_fActive?_calSearchResultsHtml():(function(){
+      var _luxeMonth=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
+      if(_luxeMonth){
+        /* v60.4: one continuous touching card, date folded into each row's
+           subtitle via relDayLabel — matches New Format elsewhere. */
+        var _flatRowsM=dkCal.map(function(dk){
+          var gi=grpCal[dk];
+          var gDate=new Date(yr,mo,parseInt(dk));
+          return gi.map(function(e){
+            var src=(e.type==="income"?state.income:e.type==="bill"?state.bills:state.expenses).find(function(x){return x.id===e.id;})||{};
+            var _rOptsM={label:e.name,type:e.type,cat:e.category,amount:e.amount,accountId:src.accountId,dueTime:src.dueTime,dt:gDate,isRecurring:src.freqUnit&&src.freqUnit!=='once',autopay:src.autopay,freq:(src.freqUnit&&src.freqUnit!=='once')?freqAbbr(src):'',dateLabel:relDayLabel(gDate)};
+            return swipeRow(e.id,txRowLuxe(_rOptsM),e.type,e.dateStr);
+          }).join('');
+        }).join('');
+        return _flatRowsM?'<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.03)">'+_flatRowsM+'</div>':'';
+      }
+      return dkCal.map(function(dk){
       var gi=grpCal[dk];
       var gDate=new Date(yr,mo,parseInt(dk));
       var gLbl=gDate.toLocaleDateString("en-US",{weekday:'short',month:'short',day:'numeric'});
@@ -10226,13 +10282,12 @@ function renderCalendarFlow(){
       var gHdr=dateGroupHdr(gLbl,gNet,{hasRecur:hasRecurCal,hasAuto:hasAutoCal,hasPaid:hasPaidCal});
       var gRows=gi.map(function(e){
         var src=(e.type==="income"?state.income:e.type==="bill"?state.bills:state.expenses).find(function(x){return x.id===e.id;})||{};
-        var _luxeCal2=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
-        var _rOptsCal2={label:e.name,type:e.type,cat:e.category,amount:e.amount,accountId:src.accountId,dueTime:src.dueTime,dt:new Date(e.dateStr),isRecurring:src.freqUnit&&src.freqUnit!=='once',autopay:src.autopay,freq:(src.freqUnit&&src.freqUnit!=='once')?freqAbbr(src):''};
-        var inner=_luxeCal2?txRowLuxe(_rOptsCal2):txRow(_rOptsCal2);
+        var inner=txRow({label:e.name,type:e.type,cat:e.category,amount:e.amount,accountId:src.accountId,dueTime:src.dueTime,dt:new Date(e.dateStr),isRecurring:src.freqUnit&&src.freqUnit!=='once',autopay:src.autopay,freq:(src.freqUnit&&src.freqUnit!=='once')?freqAbbr(src):''});
         return swipeRow(e.id,inner,e.type,e.dateStr);
       }).join('');
       return '<div class="date-group" style="background:var(--card-grad);border:1px solid transparent;border-radius:12px;margin-bottom:4px;overflow:hidden">'+gHdr+gRows+'</div>';
-    }).join(''));
+    }).join('');
+    })());
   }
 
   // The cal-swipe-zone wrapper is already closed above (after the calendar grid)
@@ -10246,8 +10301,8 @@ function renderOverview(){
      date-grouped list starts straight after the hero, as before). */
   var _luxeOv=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
   var luxeHdr=_luxeOv?'<div style="display:flex;justify-content:space-between;align-items:baseline;margin:18px 2px 8px">'+
-    '<span style="font-size:15px;font-weight:650;letter-spacing:-.01em;color:var(--text)">Recent activity</span>'+
-    '<span onclick="setTab(\'calendar\')" style="font-size:11px;font-weight:600;color:'+accent()+';cursor:pointer">View all</span>'+
+    '<span style="font-size:15px;font-weight:590;letter-spacing:-.01em;color:var(--text)">Recent activity</span>'+
+    '<span onclick="setTab(\'calendar\')" style="font-size:11px;font-weight:560;color:'+accent()+';cursor:pointer">View all</span>'+
   '</div>':'';
   return renderOverviewHeroBlock()+luxeHdr+renderUpcoming();
 }
@@ -10963,11 +11018,11 @@ function renderTransfersTab(){
         '<div style="display:flex;align-items:center;gap:14px;min-width:0;flex:1">'+
           '<div style="position:relative;width:42px;height:42px;border-radius:999px;background:var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('exchange','var(--sub)',19)+recurIconBadge(isRecurring,freqAbbr(tx))+'</div>'+
           '<div style="min-width:0">'+
-            '<div style="font-size:14.5px;font-weight:600;letter-spacing:-.005em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+label+'</div>'+
+            '<div style="font-size:14.5px;font-weight:500;letter-spacing:-.005em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+label+'</div>'+
             '<div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">'+xferSubtitle+'</div>'+
           '</div>'+
         '</div>'+
-        '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+transferMk+'<span style="font-size:14.5px;font-weight:650;font-variant-numeric:tabular-nums;color:var(--text);font-family:\'SF Mono\',ui-monospace,monospace">'+fmt(tx.amount)+'</span></div>'+
+        '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+transferMk+'<span style="font-size:14.5px;font-weight:590;font-variant-numeric:tabular-nums;color:var(--text);font-family:\'SF Mono\',ui-monospace,monospace">'+fmt(tx.amount)+'</span></div>'+
       '</div>';
     } else {
     inner='<div style="'+S({display:"flex",alignItems:"center",gap:"10px",padding:"12px 13px",background:"var(--card)"})+'">'+
@@ -11725,12 +11780,23 @@ function catChip(ci){
  * label — the date label string (left side).
  * labelColor — optional CSS color string for the label.
  */
+/* relDayLabel: "Today"/"Yesterday"/"Tomorrow" or short weekday+date — used to
+   fold the date into each row's subtitle in New Format instead of a
+   separate per-day header (v60.4). */
+function relDayLabel(d){
+  var dd=(d instanceof Date)?d:new Date(d);
+  var diffDays=Math.round((new Date(dd.getFullYear(),dd.getMonth(),dd.getDate())-new Date(today.getFullYear(),today.getMonth(),today.getDate()))/86400000);
+  if(diffDays===0)return'Today';
+  if(diffDays===1)return'Tomorrow';
+  if(diffDays===-1)return'Yesterday';
+  return dd.toLocaleDateString("en-US",{weekday:'short',month:'short',day:'numeric'});
+}
 function dateGroupHdr(label,net,flags,labelColor){
   var _luxe=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
   if(_luxe){
     var netStrL=net!==undefined?'<span style="font-size:11px;font-weight:500;color:var(--muted);font-family:\'SF Mono\',ui-monospace,monospace">'+(net>=0?'+':'')+fmt(net)+'</span>':'';
     return '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:14px 18px 6px">'+
-      '<span style="font-size:15px;font-weight:650;letter-spacing:-.01em;color:'+(labelColor||'var(--text)')+'">'+label+'</span>'+
+      '<span style="font-size:15px;font-weight:590;letter-spacing:-.01em;color:'+(labelColor||'var(--text)')+'">'+label+'</span>'+
       netStrL+
     '</div>';
   }
@@ -11819,20 +11885,21 @@ function txRowLuxe(opts){
     timeStr=td_.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
   }
   var catLabel=isTransferRow?'Transfer':((!isUncat&&ci.label)?ci.label:(type==='income'?'Income':'Uncategorised'));
-  var subtitle=catLabel+(timeStr?' • '+timeStr:'');
+  var dateBit=opts.dateLabel?(opts.dateLabel+(timeStr?', '+timeStr:'')):timeStr;
+  var subtitle=catLabel+(dateBit?' • '+dateBit:'');
   var acct=opts.accountId!==undefined?getAccount(opts.accountId):null;
   var acctStr=acct?acct.name:'';
   var inner='<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;background:var(--card-grad);border-top:1px solid var(--border)"'+(opts.onclick&&!opts.onclickWrap?' onclick="'+opts.onclick+'"':'')+'>'+
     '<div style="display:flex;align-items:center;gap:14px;min-width:0;flex:1">'+
       avatar+
       '<div style="min-width:0">'+
-        '<div style="font-size:14.5px;font-weight:600;letter-spacing:-.005em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+opts.label+'</div>'+
+        '<div style="font-size:14.5px;font-weight:500;letter-spacing:-.005em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+opts.label+'</div>'+
         '<div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">'+subtitle+'</div>'+
       '</div>'+
     '</div>'+
     '<div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;gap:3px">'+
-      '<div style="display:flex;align-items:center;gap:6px">'+statusMarkers(opts)+'<span style="font-size:14.5px;font-weight:650;font-variant-numeric:tabular-nums;color:'+amtColor+';font-family:\'SF Mono\',ui-monospace,monospace">'+amtStr+'</span></div>'+
-      (acctStr?'<span style="font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">'+escHtml(acctStr)+'</span>':
+      '<div style="display:flex;align-items:center;gap:6px">'+statusMarkers(opts)+'<span style="font-size:14.5px;font-weight:590;font-variant-numeric:tabular-nums;color:'+amtColor+';font-family:\'SF Mono\',ui-monospace,monospace">'+amtStr+'</span></div>'+
+      (acctStr?'<span style="font-size:9.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">'+escHtml(acctStr)+'</span>':
         (opts.balAfter!==undefined?'<span style="font-size:9.5px;color:'+(opts.balAfter<0?rdFg:'var(--muted)')+';font-family:\'SF Mono\',ui-monospace,monospace">bal '+fmt(opts.balAfter)+'</span>':''))+
     '</div>'+
   '</div>';
