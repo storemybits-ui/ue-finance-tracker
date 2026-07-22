@@ -1,9 +1,11 @@
 {
-  "version": "59.2",
-  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v59.2.zip",
+  "version": "59.3",
+  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v59.3.zip",
   "notes": [
-    "Portfolio Value (Shares tab) now totals every holding, full stop \\u2014 it no longer hides holdings you've excluded from Net Worth. Net Worth keeps respecting each item's include/exclude checkbox. Added a tap-for-info icon on both totals explaining the difference.",
-    "Fixed share holdings silently counting as $0 toward Net Worth everywhere \\u2014 the Net Worth total, the combined multi-profile total, cloud sync's snapshot total, the Shares section subtotal, and the sort order all read a field shares never populate. They now use each share's real qty \\u00d7 price.",
-    "Balance's roll-up number animation (Overview hero) now also plays for the Net Worth total and for each profile's balance in the Combined Profiles screen \\u2014 previously only Balance animated when its value changed."
+    "Fixed the month picker dropdown not landing flush with the selected month \\u2014 it was measuring the list's scroll position before the browser had actually committed layout for the freshly-opened panel. Now waits a frame first.",
+    "Net Worth's Shares / Property & Loans / Assets / Debts subtotals (composition bar, group headers, and the Portfolio tab's Mortgages/Assets/Debts totals) now total everything in that bucket automatically, matching Portfolio Value. Only the single main Net Worth figure still respects each item's include/exclude checkbox.",
+    "Added a tap-for-info icon on the Remaining Budget card explaining how Remaining, % Used, and Daily Limit are each calculated.",
+    "Fixed the info tooltips (Net Worth, Portfolio Value, Remaining Budget) appearing behind whatever modal was open, and auto-dismissing after 2.5 seconds before they could really be read. They now use the same themed-alert mechanism as the rest of the app \\u2014 always on top, stays open until you tap OK, tap outside, or go back.",
+    "Confirmed Efficiency Score's tap-for-breakdown (full category-by-category comparison vs last month to date) is fully wired up and working."
   ]
 }
