@@ -1,11 +1,8 @@
 {
-  "version": "59.3",
-  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v59.3.zip",
+  "version": "60.0",
+  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v60.0.zip",
   "notes": [
-    "Fixed the month picker dropdown not landing flush with the selected month \\u2014 it was measuring the list's scroll position before the browser had actually committed layout for the freshly-opened panel. Now waits a frame first.",
-    "Net Worth's Shares / Property & Loans / Assets / Debts subtotals (composition bar, group headers, and the Portfolio tab's Mortgages/Assets/Debts totals) now total everything in that bucket automatically, matching Portfolio Value. Only the single main Net Worth figure still respects each item's include/exclude checkbox.",
-    "Added a tap-for-info icon on the Remaining Budget card explaining how Remaining, % Used, and Daily Limit are each calculated.",
-    "Fixed the info tooltips (Net Worth, Portfolio Value, Remaining Budget) appearing behind whatever modal was open, and auto-dismissing after 2.5 seconds before they could really be read. They now use the same themed-alert mechanism as the rest of the app \\u2014 always on top, stays open until you tap OK, tap outside, or go back.",
-    "Confirmed Efficiency Score's tap-for-breakdown (full category-by-category comparison vs last month to date) is fully wired up and working."
+    "Added Mercury \\u2014 a new premium light theme (near-white page, pure-white elevated cards with hairline borders and a soft shadow, ink-black text, single green/blue/orange accent set). Pick it from Settings \\u2192 Theme.",
+    "Settings screen no longer opens full-height \\u2014 it's now capped at 3/4 of the screen (75vh) like other bottom sheets."
   ]
 }
