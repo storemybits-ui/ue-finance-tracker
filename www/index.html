@@ -59,7 +59,7 @@ body.okuyasu #bg-blobs{background:linear-gradient(315deg,rgba(74,46,143,0.22) 0%
   } catch(e){}
 })();
 </script>
-<title>finance-tracker v60.01</title>
+<title>finance-tracker v60.2</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-serif}
@@ -443,10 +443,15 @@ body.dark select option{background:#13161F}
 <div id="bg-blobs"></div>
 <div id="root"></div>
 <script>
-var APP_VERSION="60.01";
+var APP_VERSION="60.2";
 /* ── Changelog: shown after an update installs. Keyed by app version. ──────────
    Add a new entry each release with short, user-facing bullet points. ────────── */
 var CHANGELOG = {
+  "60.2": [
+    "Added New Format \u2014 a full alternate look for the app, toggled from Settings (or the small layout icon on the Transactions tab): circular neutral avatars instead of colour-coded category tiles, hairline dividers instead of boxed rows, and an account label under each amount, applied to Overview, Upcoming, Recurring (Income/Bills/Expenses/Transfers), and Transactions.",
+    "New Format also moves primary navigation from the bottom bar to a top tab strip, with the quick-add button always in the bottom-right corner instead of embedded in the nav bar.",
+    "Portfolio holdings keep their existing card layout in both formats for now \u2014 they carry price/refresh/market details a simple transaction row can't show without losing functionality."
+  ],
   "60.01": [
     "Fixed the Settings sheet changing height depending on your text size setting \u2014 it was using a shrink-to-fit max-height, so smaller text made a shorter sheet. It now holds a constant 3/4-screen height regardless of text size, matching how the Net Worth tabs already behave."
   ],
@@ -8907,6 +8912,10 @@ function renderHeader(){
     /* Month bar pins with the header on every tab (hidden on Recurring).
        Stats + hero chart moved into the scrollable Overview content (v54.3). */
     renderMonthBar()+
+    /* v60.2: top-nav mode (uiPrefs.txLayout==='luxe') appends the tab strip
+       here, inside #hdr, so the existing header-height auto-measurement in
+       render() picks it up for free — no separate height math needed. */
+    (!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe')?renderTopTabs():'')+
   '</div>';
 }
 
@@ -9166,6 +9175,39 @@ function renderTabs(){
     left.map(function(t){return tabBtn(t[0],t[1],t[2],state.tab===t[0],"10px");}).join('')+
     fab+
     right.map(function(t){return tabBtn(t[0],t[1],t[2],state.tab===t[0],"10px");}).join('')+
+    moreBtn+
+  '</div>';
+}
+
+/* renderTopTabs: top-nav variant of renderTabs (v60.2, uiPrefs.txLayout==='luxe').
+   Rendered INSIDE #hdr (see renderHeader) rather than position:fixed, so the
+   existing header-height auto-measurement (see render()'s requestAnimationFrame
+   block) picks up its height for free — #ca's top offset needs no separate
+   calculation. Same enabled-tab / overflow logic as renderTabs, just a plain
+   horizontal strip with no embedded centre-add slot (the corner FAB covers
+   that in this mode — see render()). */
+function renderTopTabs(){
+  var _up=state.uiPrefs||{};
+  var tabs=[["overview","Overview","overview"]];
+  if(_up.showCalendarTab!==false)tabs.push(["calendar","Calendar","calendar"]);
+  if(_up.showMoneyTab!==false)tabs.push(["money","Recurring","wallet"]);
+  if(_up.showBudgetsTab!==false)tabs.push(["budgets","Budgets","budgets"]);
+  var pref=['overview','calendar','budgets'];
+  var primary=[];
+  pref.forEach(function(k){var t=tabs.filter(function(x){return x[0]===k;})[0];if(t)primary.push(t);});
+  var rest=tabs.filter(function(t){return primary.indexOf(t)<0;});
+  var maxPrimary=tabs.length<=4?4:3;
+  while(primary.length<maxPrimary&&rest.length){primary.push(rest.shift());}
+  var overflow=rest;
+  var moreActive=overflow.some(function(t){return t[0]===state.tab;});
+  var ac_nav=accent();
+  function topTabBtn(key,label,on){
+    return '<button onclick="setTab(\''+key+'\')" style="'+S({flex:1,minWidth:0,background:"transparent",border:"none",borderBottom:"2px solid "+(on?ac_nav:"transparent"),padding:"9px 4px",color:on?ac_nav:"var(--muted)",fontWeight:on?700:600,fontSize:"11px",cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"})+'">'+label+'</button>';
+  }
+  var moreBtn=overflow.length?
+    '<button onclick="openModal(\'moreTabs\')" style="'+S({flex:1,minWidth:0,background:"transparent",border:"none",borderBottom:"2px solid "+(moreActive?ac_nav:"transparent"),padding:"9px 4px",color:moreActive?ac_nav:"var(--muted)",fontWeight:moreActive?700:600,fontSize:"11px",cursor:"pointer",fontFamily:"inherit"})+'">More</button>':'';
+  return '<div style="display:flex;gap:2px;margin-top:8px;border-top:1px solid var(--border)">'+
+    primary.map(function(t){return topTabBtn(t[0],t[1],state.tab===t[0]);}).join('')+
     moreBtn+
   '</div>';
 }
@@ -9791,6 +9833,7 @@ function statCard(icon,label,val,sub,color,bg,onclick){
 
 /* ─── Render: Upcoming ─── */
 function renderUpcoming(){
+  var txLuxe=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
   var _showOvdPref=(state.uiPrefs&&state.uiPrefs.showOverdueSection===false)?false:true;
   var overdueItems=(state.showOverdueInUpcoming&&_showOvdPref)?getOverdueItems():[];
   var ac=accent(),at=accentText(),rdFg=typeRedFg(),bluFg=typeBlueFg();
@@ -9852,6 +9895,15 @@ function renderUpcoming(){
     var isToday=ds===today.toDateString();
     var _src=(!isTransfer)?((ev.type==='income'?state.income:ev.type==='bill'?state.bills:state.expenses)||[]).find(function(x){return x.id===ev.id;}):null;
     var _isRecur=_src&&((_src.freqUnit&&_src.freqUnit!=='once')||(_src.frequency&&_src.frequency!=='once'));
+    if(txLuxe){
+      var _luxeOpts={
+        label:ev.label,type:isTransfer?'transfer':ev.type,cat:isTransfer?'transfer':(ev.category||'other'),
+        amount:ev.amount,isRecurring:_isRecur,freq:_src?freqAbbr(_src):'',
+        autopay:(!isTransfer&&ev.autopay),accountId:ev.accountId,dueTime:ev.dueTime,dt:ev.date,
+        balAfter:ev.balance,note:ev.note
+      };
+      return swipeRow(ev.id,txRowLuxe(_luxeOpts),ev.type,ds);
+    }
     var _evMk=statusMarkers({isRecurring:_isRecur,freq:_src?freqAbbr(_src):'',autopay:(!isTransfer&&ev.autopay),type:ev.type});
     /* v59.1: a transfer viewed across all accounts combined has zero net
        effect on total assets (ev.amount is 0 by design — see getTimeline),
@@ -10788,7 +10840,9 @@ function renderIncomeTab(){
       '<div class="date-group" style="background:var(--card-grad);border:1px solid transparent;border-radius:12px;margin-bottom:4px;overflow:hidden">'+
         sortedIncome.map(function(s){
           var isRecurring=(s.freqUnit&&s.freqUnit!=="once")||(s.frequency&&s.frequency!=="once");
-          var inner=txRow({label:s.name,type:"income",cat:s.category,amount:s.amount,isRecurring:isRecurring,autopay:s.autopay,note:s.note,freq:isRecurring?freqAbbr(s):'',onclick:"openEdit('income',"+s.id+")"});
+          var _txLuxeInc=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
+          var _rOpts={label:s.name,type:"income",cat:s.category,amount:s.amount,isRecurring:isRecurring,autopay:s.autopay,note:s.note,freq:isRecurring?freqAbbr(s):'',onclick:"openEdit('income',"+s.id+")"};
+          var inner=_txLuxeInc?txRowLuxe(_rOpts):txRow(_rOpts);
           return '<div onclick="openEdit(\'income\','+s.id+')" style="cursor:pointer">'+inner+'</div>';
         }).join('')+
       '</div>':(allIncome.length?'':emptyState('income','No income yet','Add your salary or any money coming in.\nRecurring income appears in the forecast automatically.')))+
@@ -10821,7 +10875,9 @@ function renderBillsTab(){
       '<div class="date-group" style="background:var(--card-grad);border:1px solid transparent;border-radius:12px;margin-bottom:4px;overflow:hidden">'+
         sortedBills.map(function(b){
           var isRecurring=(b.freqUnit&&b.freqUnit!=="once")||(b.frequency&&b.frequency!=="once");
-          var inner=txRow({label:b.name,type:"bill",cat:b.category,amount:-b.amount,isRecurring:isRecurring,autopay:b.autopay,note:b.note,freq:isRecurring?freqAbbr(b):''});
+          var _txLuxeBill=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
+          var _rOptsB={label:b.name,type:"bill",cat:b.category,amount:-b.amount,isRecurring:isRecurring,autopay:b.autopay,note:b.note,freq:isRecurring?freqAbbr(b):''};
+          var inner=_txLuxeBill?txRowLuxe(_rOptsB):txRow(_rOptsB);
           return '<div onclick="openEdit(\'bill\','+b.id+')" style="cursor:pointer">'+inner+'</div>';
         }).join('')+
       '</div>':(state.bills.length?'':emptyState('bills','No bills yet','Add rent, utilities or subscriptions.\nAutopay bills post themselves on their due date.')))+
@@ -10855,7 +10911,9 @@ function renderExpensesTab(){
       '<div class="date-group" style="background:var(--card-grad);border:1px solid transparent;border-radius:12px;margin-bottom:4px;overflow:hidden">'+
         sortedExpenses.map(function(e){
           var isRecurring=(e.freqUnit&&e.freqUnit!=="once")||(e.frequency&&e.frequency!=="once");
-          var inner=txRow({label:e.name,type:"expense",cat:e.category,amount:-e.amount,isRecurring:isRecurring,autopay:e.autopay,note:e.note,freq:isRecurring?freqAbbr(e):''});
+          var _txLuxeExp=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
+          var _rOptsE={label:e.name,type:"expense",cat:e.category,amount:-e.amount,isRecurring:isRecurring,autopay:e.autopay,note:e.note,freq:isRecurring?freqAbbr(e):''};
+          var inner=_txLuxeExp?txRowLuxe(_rOptsE):txRow(_rOptsE);
           return '<div onclick="openEdit(\'expense\','+e.id+')" style="cursor:pointer">'+inner+'</div>';
         }).join('')+
       '</div>':(state.expenses.length?'':emptyState('expenses','No expenses yet','Track groceries, fuel and everyday spending.\nBudgets and the forecast use these automatically.')))+
@@ -10867,6 +10925,7 @@ function renderTransfersTab(){
   var purpleFg=isMono()?(isMonoLight()?'#555555':'#AAAAAA'):((isLight()||isMercury())?'#6A5A8A':(isCrimson()?'#7A6080':P.purple));
   var purpleBg=isMono()?(isMonoLight()?'#EFEFEF':'#222222'):td("purple");
   var txs=state.transfers||[];
+  var txLuxeXfer=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
   var rows=txs.map(function(tx){
     var fromAcc=getAccount(tx.fromId),toAcc=getAccount(tx.toId);
     var fromC=isMono()?(isMonoLight()?'#444444':'#CCCCCC'):(fromAcc?fromAcc.color:purpleFg);
@@ -10876,7 +10935,21 @@ function renderTransfersTab(){
     var dateDisp=tx.startDate?tx.startDate.slice(5).replace("-","/"):"";
     var isRecurring=tx.freqUnit&&tx.freqUnit!=="once";
     var transferMk=statusMarkers({isRecurring:isRecurring,freq:freqAbbr(tx),autopay:tx.autopay,type:'expense'});
-    var inner='<div style="'+S({display:"flex",alignItems:"center",gap:"10px",padding:"12px 13px",background:"var(--card)"})+'">'+
+    var inner;
+    if(txLuxeXfer){
+      var xferSubtitle=(fromAcc?fromAcc.name:'?')+' \u2192 '+(toAcc?toAcc.name:'?')+' \u2022 '+fLabel+(dateDisp?' \u00b7 '+dateDisp:'');
+      inner='<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:var(--card-grad)">'+
+        '<div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1">'+
+          '<div style="position:relative;width:44px;height:44px;border-radius:999px;background:var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('exchange','var(--sub)',20)+recurIconBadge(isRecurring,freqAbbr(tx))+'</div>'+
+          '<div style="min-width:0">'+
+            '<div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+label+'</div>'+
+            '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">'+xferSubtitle+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+transferMk+'<span style="font-size:14px;font-weight:700;color:var(--text);font-family:monospace">'+fmt(tx.amount)+'</span></div>'+
+      '</div>';
+    } else {
+    inner='<div style="'+S({display:"flex",alignItems:"center",gap:"10px",padding:"12px 13px",background:"var(--card)"})+'">'+
       '<div style="'+S({position:"relative",width:"40px",height:"40px",borderRadius:"10px",background:purpleBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"17px",flexShrink:0})+'">'+ic('exchange','currentColor',20)+recurIconBadge(isRecurring,freqAbbr(tx))+'</div>'+
       '<div style="flex:1;min-width:0">'+
         '<div style="display:flex;align-items:center;gap:4px;min-width:0">'+
@@ -10892,6 +10965,7 @@ function renderTransfersTab(){
       transferMk+
       '<div style="font-size:16px;font-weight:700;color:'+purpleFg+';font-family:monospace;flex-shrink:0">'+fmt(tx.amount)+'</div>'+
     '</div>';
+    }
     /* Swipe to delete only (no post for transfers — balance already adjusted at creation) */
     var deleteColor=isMono()?(isMonoLight()?'#BBBBBB':'#333333'):P.red;
     var deleteTextColor=isMono()?(isMonoLight()?'#111111':'#CCCCCC'):'#fff';
@@ -11032,11 +11106,22 @@ window.setTxDateFrom=function(v){state.txTabDateFrom=v;setState({txTabRange:'cus
 window.setTxDateTo=function(v){state.txTabDateTo=v;setState({txTabRange:'custom'});};
 window.clearTxDates=function(){state.txTabDateFrom='';state.txTabDateTo='';setState({txTabRange:'last_30_days'});};
 window.setTxFilter=function(v){setState({txTabFilter:v});};
-/* Transaction row layout: default | luxe (v58.4). Persisted in uiPrefs like
-   the other display preferences — toggle button lives beside History. */
+/* Transaction row layout + primary nav position: default | luxe (v58.4;
+   v60.2 — 'luxe' also moves the tab bar from bottom to top, see render()).
+   Persisted in uiPrefs like the other display preferences. toggleTxLayout
+   flips it (used by the quick-toggle button beside History on the
+   Transactions tab); setTxLayout sets it explicitly (used by the Settings
+   switch, where two buttons need distinct on-click targets rather than a
+   single flip). */
 window.toggleTxLayout=function(){
   if(!state.uiPrefs)state.uiPrefs={};
   state.uiPrefs.txLayout=(state.uiPrefs.txLayout==='luxe')?'default':'luxe';
+  save("uiPrefs",state.uiPrefs||{});
+  render();
+};
+window.setTxLayout=function(v){
+  if(!state.uiPrefs)state.uiPrefs={};
+  state.uiPrefs.txLayout=v;
   save("uiPrefs",state.uiPrefs||{});
   render();
 };
@@ -11681,20 +11766,22 @@ function txRow(opts){
  * next to the standard txRow layout (see toggleTxLayout / uiPrefs.txLayout).
  * Same opts shape as txRow, plus accountId, dueTime ("HH:MM"), dt (Date).
  * Uses only theme CSS vars / accent(), so it follows every theme, not a
- * fixed palette.
+ * fixed palette. The avatar is intentionally neutral (var(--border) /
+ * var(--sub)) rather than per-category tinted — the whole point of this
+ * layout is a restrained, single-accent look, not a rainbow of category
+ * colours (v60.1 — matches the approved reference mockup exactly).
  */
 function txRowLuxe(opts){
   var ac=accent(),rdFg=typeRedFg();
   var type=opts.type||'expense';
-  var ci=catInfo(opts.cat||'other',type);
+  var isTransferRow=opts.cat==='transfer'||type==='transfer';
+  var ci=isTransferRow?{icon:"transfers",label:"Transfer",key:"transfer"}:catInfo(opts.cat||'other',type);
   var isUncat=ci.key===UNCATEGORISED_KEY;
   var amt=opts.amount||0;
   var amtStr=amt>=0?('+'+fmt(amt)):('-'+fmt(Math.abs(amt)));
   var amtColor=amt>=0?ac:'var(--text)';
-  var tileColor=isMono()?(isMonoLight()?'#EBEBEB':'#1E1E1E'):(ci.color+'12');
-  var iconColor=isMono()?(isMonoLight()?'#666666':'#777777'):(ci.color||'var(--muted)');
-  var iconKey=type==='income'?(ci.key!=='other'&&!isUncat?ci.icon:'income'):(isUncat?(type==='bill'?'bills':'expenses'):ci.icon);
-  var avatar='<div style="position:relative;width:44px;height:44px;border-radius:999px;background:'+tileColor+';border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(iconKey,iconColor,20)+recurIconBadge(opts.hideRecur?false:opts.isRecurring,opts.freq)+'</div>';
+  var iconKey=isTransferRow?'transfers':(type==='income'?(ci.key!=='other'&&!isUncat?ci.icon:'income'):(isUncat?(type==='bill'?'bills':'expenses'):ci.icon));
+  var avatar='<div style="position:relative;width:44px;height:44px;border-radius:999px;background:var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+renderCatIcon(iconKey,'var(--sub)',20)+recurIconBadge(opts.hideRecur?false:opts.isRecurring,opts.freq)+'</div>';
   var timeStr='';
   if(opts.dueTime&&opts.dueTime!=='00:00'&&opts.dt){
     var tParts=(''+opts.dueTime).split(':');
@@ -11702,11 +11789,11 @@ function txRowLuxe(opts){
     td_.setHours(parseInt(tParts[0])||0,parseInt(tParts[1])||0,0,0);
     timeStr=td_.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
   }
-  var catLabel=(!isUncat&&ci.label)?ci.label:(type==='income'?'Income':'Uncategorised');
+  var catLabel=isTransferRow?'Transfer':((!isUncat&&ci.label)?ci.label:(type==='income'?'Income':'Uncategorised'));
   var subtitle=catLabel+(timeStr?' • '+timeStr:'');
   var acct=opts.accountId!==undefined?getAccount(opts.accountId):null;
   var acctStr=acct?acct.name:'';
-  var inner='<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;background:var(--card-grad);border-top:1px solid var(--border)"'+(opts.onclick&&!opts.onclickWrap?' onclick="'+opts.onclick+'"':'')+'>'+
+  var inner='<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:var(--card-grad);border-top:1px solid var(--border)"'+(opts.onclick&&!opts.onclickWrap?' onclick="'+opts.onclick+'"':'')+'>'+
     '<div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1">'+
       avatar+
       '<div style="min-width:0">'+
@@ -13154,7 +13241,7 @@ function renderThemePickerModal(){
 }
 function renderSettingsModal(){
   var thOpts=[["dark","Dark"],["light","Light"],["mercury","Mercury"],["system","System"],["mono","Mono Dark"],["mono-light","Mono Light"],["crimson","Crimson Shadows"],["okuyasu","The Hand"],["moody-queen","Moody Blues"],["heavens-door","Heaven's Door"],["king-crimson","King Crimson"],["silver-chariot","Silver Chariot"],["star-platinum","Star Platinum"],["echoes","Echoes"],["golden-experience","Golden Experience"],["killer-queen","Killer Queen"]];
-  var ac2=accent(),td_acc=td("accent");
+  var ac2=accent(),at2=accentText(),td_acc=td("accent");
   var exportBg=isMono()?'var(--dim-blue)':td("blue");
   var exportBd=isMono()?(isMonoLight()?'#CCCCCC':'#444444'):((isLight()||isMercury())?'#A8A0B8':(isCrimson()?'#505060':P.blue+"44"));
   var exportFg=isMono()?(isMonoLight()?'#444444':'#AAAAAA'):((isLight()||isMercury())?'#6A5A8A':(isCrimson()?'#8888A0':P.blue));
@@ -13168,6 +13255,23 @@ function renderSettingsModal(){
   /* Simplified colour bar: green → yellow → red */
   /* Theme dropdown */
   var themeDropdown='<div style="margin-bottom:18px">'+themedSelect('theme-pick',thOpts,themeMode,function(v){return "setTheme('"+v+"')";})+'</div>';
+
+  /* ── New Format toggle (v60.2): switches transaction rows to the Luxe
+     circular-avatar layout AND moves primary navigation from the bottom bar
+     to a top tab strip. Same underlying uiPrefs.txLayout flag the
+     Transactions tab's quick-toggle button already used (v58.4) — this just
+     adds an explicit Settings control alongside it. */
+  var _fmtOn=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
+  var newFormatToggle='<div style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--surface);border-radius:11px;border:1px solid var(--border);margin-bottom:18px">'+
+    '<div style="flex:1;min-width:0">'+
+      '<div style="font-size:13px;font-weight:600;color:var(--text)">New Format</div>'+
+      '<div style="font-size:10px;color:var(--muted);margin-top:1px">Circular transaction icons and top tab navigation, instead of the standard layout</div>'+
+    '</div>'+
+    '<div style="display:flex;gap:4px;flex-shrink:0">'+
+      '<button onclick="setTxLayout(\'default\')" style="background:'+(!_fmtOn?(isMonoLight()?'#DDDDDD':ac2):'var(--surface)')+';border:1px solid '+(!_fmtOn?(isMonoLight()?'#BBBBBB':ac2):'var(--border)')+';border-radius:7px;padding:5px 11px;color:'+(!_fmtOn?(isMonoLight()?'#111111':at2):'var(--sub)')+';font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Standard</button>'+
+      '<button onclick="setTxLayout(\'luxe\')" style="background:'+(_fmtOn?(isMonoLight()?'#DDDDDD':ac2):'var(--surface)')+';border:1px solid '+(_fmtOn?(isMonoLight()?'#BBBBBB':ac2):'var(--border)')+';border-radius:7px;padding:5px 11px;color:'+(_fmtOn?(isMonoLight()?'#111111':at2):'var(--sub)')+';font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">New</button>'+
+    '</div>'+
+  '</div>';
 
   /* ── Calendar Balance Colours — simplified 2-threshold UI ── */
   /* Use balColor() with sentinel values above/between/below thresholds so bar matches calendar */
@@ -13290,6 +13394,7 @@ function renderSettingsModal(){
         '<span style="font-size:14px;color:var(--muted)">›</span>'+
       '</button>';
     })()+
+    newFormatToggle+
     settingsNavBtn("Text Size","text_size",(textSize==='small'?'Small':textSize==='large'?'Large':textSize==='xl'?'XL':'Medium'),"textSize")+
     settingsNavBtn("Layout","layout","Show/hide tabs and UI elements","layout")+
     settingsNavBtn("Notifications","notifications","Permission status and OS settings","notifications")+
@@ -16048,6 +16153,13 @@ function render(){
   if(ca && !_scrollRestorePending) _scrollByTab[_lastTab] = ca.scrollTop;
 
   var purpleFg_fab=isMono()?(isMonoLight()?'#555555':'#AAAAAA'):((isLight()||isMercury())?'#6A5A8A':(isCrimson()?'#CC2233':P.purple));
+  /* v60.2: uiPrefs.txLayout also drives primary nav position — 'luxe' moves
+     the tab bar from the bottom to the top (inside the header, so #ca's
+     auto-measured top offset picks up its height with no extra math) and
+     always shows the corner + FAB instead of the compact bar's embedded
+     centre-add button, since a top strip has no natural centre slot. */
+  var _topNav=!!(state.uiPrefs&&state.uiPrefs.txLayout==='luxe');
+  var _navH=_topNav?0:NAV_H;
   /* Legacy: the four management tabs are now sub-sections of the Money tab */
   if(state.tab==="income"||state.tab==="bills"||state.tab==="expenses"||state.tab==="transfers"){
     state.moneySub=state.tab;state.tab="money";
@@ -16060,16 +16172,17 @@ function render(){
          state.tab==="portfolio"?renderPortfolioTab():
          state.tab==="transactions"?renderTransactionsTab():renderOverview();
   var fab;
-  var fabBottom='calc('+NAV_H+'px + 18px)';
+  var fabBottom='calc('+_navH+'px + 18px)';
   /* FAB right: matches the content padding so it aligns with the layout */
   var fabRight=getAppPad()+'px';
   var ac_fab=accent(),at_fab=accentText();
   /* + FAB opens type picker on all tabs except transactions, budgets.
      In the compact bar the centre + button already covers Overview, Calendar
-     and Recurring (v53.9/v53.30), so the corner FAB is redundant there. */
+     and Recurring (v53.9/v53.30), so the corner FAB is redundant there.
+     In top-nav mode there is no centre-add slot, so the FAB always shows. */
   /* Compact bar is the only nav (v53.32): its centre + covers Overview,
      Calendar and Recurring, so the corner FAB never shows there. */
-  if(state.tab!=="transactions"&&state.tab!=="budgets"&&state.tab!=="overview"&&state.tab!=="calendar"&&state.tab!=="money"&&state.tab!=="portfolio"){
+  if(_topNav||(state.tab!=="transactions"&&state.tab!=="budgets"&&state.tab!=="overview"&&state.tab!=="calendar"&&state.tab!=="money"&&state.tab!=="portfolio")){
     fab='<button onclick="openAddPicker()" style="position:fixed;bottom:'+fabBottom+';right:'+fabRight+';width:54px;height:54px;border-radius:50%;background:'+ac_fab+';border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 24px '+ac_fab+'66;display:flex;align-items:center;justify-content:center;z-index:110;color:'+at_fab+';font-family:inherit">+</button>';
   } else {
     fab='';
@@ -16079,7 +16192,7 @@ function render(){
   /* Content area: full viewport height minus header minus bottom nav */
   /* FAB is 54px tall, sitting 18px above the nav bar — add enough clearance when present */
   var hasFab=fab!=='';
-  var pbBottom=hasFab?'calc('+NAV_H+'px + 54px + 18px + 24px + env(safe-area-inset-bottom,0px))':'calc('+NAV_H+'px + 24px + env(safe-area-inset-bottom,0px))';
+  var pbBottom=hasFab?'calc('+_navH+'px + 54px + 18px + 24px + env(safe-area-inset-bottom,0px))':'calc('+_navH+'px + 24px + env(safe-area-inset-bottom,0px))';
   var _ap=getAppPad();
   /* #ca uses position:fixed so its height is always exactly the space between header and nav,
      regardless of how tall the header actually renders. The top value is set to a rough
@@ -16094,8 +16207,8 @@ function render(){
   document.getElementById('root').innerHTML=
     '<div style="background:transparent;min-height:100vh;width:100%;position:relative;z-index:1;font-family:system-ui,-apple-system,sans-serif;color:var(--text)">'+
       renderHeader()+
-      '<div id="ca" style="position:fixed;left:0;right:0;top:'+(_caTopPx||190)+'px;bottom:'+NAV_H+'px;overflow-y:auto;padding:'+(state.tab==='overview'?8:5)+'px '+_ap+'px;padding-bottom:'+pbBottom+'">'+tc+'</div>'+
-      renderTabs()+
+      '<div id="ca" style="position:fixed;left:0;right:0;top:'+(_caTopPx||190)+'px;bottom:'+_navH+'px;overflow-y:auto;padding:'+(state.tab==='overview'?8:5)+'px '+_ap+'px;padding-bottom:'+pbBottom+'">'+tc+'</div>'+
+      (_topNav?'':renderTabs())+
       fab+
       renderModal()+
       renderSimpleToast()+

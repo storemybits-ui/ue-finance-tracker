@@ -1,7 +1,9 @@
 {
-  "version": "60.01",
-  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v60.01.zip",
+  "version": "60.2",
+  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v60.2.zip",
   "notes": [
-    "Fixed the Settings sheet changing height depending on your text size setting \\u2014 it was using a shrink-to-fit max-height, so smaller text made a shorter sheet. It now holds a constant 3/4-screen height regardless of text size, matching how the Net Worth tabs already behave."
+    "Added New Format \\u2014 a full alternate look for the app, toggled from Settings (or the small layout icon on the Transactions tab): circular neutral avatars instead of colour-coded category tiles, hairline dividers instead of boxed rows, and an account label under each amount, applied to Overview, Upcoming, Recurring (Income/Bills/Expenses/Transfers), and Transactions.",
+    "New Format also moves primary navigation from the bottom bar to a top tab strip, with the quick-add button always in the bottom-right corner instead of embedded in the nav bar.",
+    "Portfolio holdings keep their existing card layout in both formats for now \\u2014 they carry price/refresh/market details a simple transaction row can't show without losing functionality."
   ]
 }
