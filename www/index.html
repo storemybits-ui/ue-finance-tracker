@@ -59,7 +59,7 @@ body.okuyasu #bg-blobs{background:linear-gradient(315deg,rgba(74,46,143,0.22) 0%
   } catch(e){}
 })();
 </script>
-<title>finance-tracker v60.0</title>
+<title>finance-tracker v60.01</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-serif}
@@ -443,10 +443,13 @@ body.dark select option{background:#13161F}
 <div id="bg-blobs"></div>
 <div id="root"></div>
 <script>
-var APP_VERSION="60.0";
+var APP_VERSION="60.01";
 /* ── Changelog: shown after an update installs. Keyed by app version. ──────────
    Add a new entry each release with short, user-facing bullet points. ────────── */
 var CHANGELOG = {
+  "60.01": [
+    "Fixed the Settings sheet changing height depending on your text size setting \u2014 it was using a shrink-to-fit max-height, so smaller text made a shorter sheet. It now holds a constant 3/4-screen height regardless of text size, matching how the Net Worth tabs already behave."
+  ],
   "60.0": [
     "Added Mercury \u2014 a new premium light theme (near-white page, pure-white elevated cards with hairline borders and a soft shadow, ink-black text, single green/blue/orange accent set). Pick it from Settings \u2192 Theme.",
     "Settings screen no longer opens full-height \u2014 it's now capped at 3/4 of the screen (75vh) like other bottom sheets."
@@ -13315,7 +13318,7 @@ function renderSettingsModal(){
       '<div style="font-size:11px;color:var(--muted);font-weight:500">App Version '+APP_VERSION+'</div>'+
       '<div id="check-updates-lnk" onclick="try{checkForUpdatesNow(this)}catch(e){alert(\'Check for Updates failed: \'+((e&&e.message)||e))}" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:'+P.blue+';cursor:pointer">Check for Updates</div>'+
     '</div>'
-  ,{maxHeight:75});
+  ,{maxHeight:75,fixedHeight:true});
 }
 
 /* ─── Settings sub-section modal (Layout / Custom Categories) ─── */

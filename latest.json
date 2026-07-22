@@ -1,8 +1,7 @@
 {
-  "version": "60.0",
-  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v60.0.zip",
+  "version": "60.01",
+  "url": "https://raw.githubusercontent.com/storemybits-ui/ue-finance-tracker/main/bundles/bundle-v60.01.zip",
   "notes": [
-    "Added Mercury \\u2014 a new premium light theme (near-white page, pure-white elevated cards with hairline borders and a soft shadow, ink-black text, single green/blue/orange accent set). Pick it from Settings \\u2192 Theme.",
-    "Settings screen no longer opens full-height \\u2014 it's now capped at 3/4 of the screen (75vh) like other bottom sheets."
+    "Fixed the Settings sheet changing height depending on your text size setting \\u2014 it was using a shrink-to-fit max-height, so smaller text made a shorter sheet. It now holds a constant 3/4-screen height regardless of text size, matching how the Net Worth tabs already behave."
   ]
 }
